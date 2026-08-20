@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Light preset (default, :root). */
+:root {
+  --color-ink: #0F1B2D;
+  --color-parchment: #F6F1E4;
+  --color-parchment2: #EFE7D3;
+  --color-surface: #FFFFFF;
+  --color-slate: #4B5563;
+  --color-link: #1B2A4A;
+}
+
+/* Dark preset - applied globally via a "dark" class on <html> (toggled by
+   ThemeContext), so every screen that uses these tokens (dashboards, auth
+   pages, guest result lookup) can theme. The fixed brand elements (indigo
+   sidebar, ink login backdrop, brass accents) are intentionally NOT in this
+   list - they're static Tailwind colors, not CSS vars, so they stay on-brand
+   in both modes. */
+html.dark {
+  --color-ink: #F0ECE0;
+  --color-parchment: #070B12;
+  --color-parchment2: #101827;
+  --color-surface: #1A2433;
+  --color-slate: #98A3B0;
+  --color-link: #8AB4F8;
+}
+
+body {
+  @apply bg-parchment text-ink font-body;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Ledger-style hairline divider - the signature motif reused across dashboards */
+.ledger-rule {
+  border-top: 1px solid theme("colors.brass");
+  opacity: 0.4;
+}
+
+/* Smooth color transitions on theme toggle, app-wide. */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
