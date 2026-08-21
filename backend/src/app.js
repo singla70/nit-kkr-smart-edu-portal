@@ -11,6 +11,7 @@ import { notFound, errorHandler } from "./middleware/errorHandler.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
 
 const app = express();
+app.set("trust proxy", 1);
 
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(express.json());
