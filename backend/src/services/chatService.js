@@ -7,25 +7,54 @@ import Announcement from "../models/Announcement.js";
 import Result from "../models/Result.js";
 import SearchLog from "../models/SearchLog.js";
 
+// Appended to every answer-generating prompt (not the intent-classification
+// one) - keeps replies short, plain-text, and on-topic regardless of which
+// LLM is behind GROQ_MODEL. A short question like "HTML full form" should
+// get a short answer, not a wall of text.
+const FORMATTING_RULE = `
+Formatting rules:
+- Answer ONLY what was asked, as briefly as that genuinely allows - usually 1-3 sentences.
+- Plain text only. No markdown symbols (no **, ##, backticks, or headers).
+- No preamble, no restating the question, no "Sure, here's..." - start directly with the answer.
+- Use a "- " list ONLY when the answer genuinely covers multiple records/items; otherwise plain sentences.`;
+
+/**
+ * Best-effort JSON extraction: the model is asked to return only JSON, but
+ * some models occasionally wrap it in stray text - try a direct parse first,
+ * then fall back to pulling out the first {...} block before giving up.
+ */
+const parseJsonLoose = (text) => {
+  try {
+    return JSON.parse(text);
+  } catch {
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) {
+      try {
+        return JSON.parse(match[0]);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+};
+
 /**
  * Detects which domain a user's chat message belongs to, so the unified
  * chat can route to the right data source instead of always doing a full
  * RAG search across everything.
  */
 const detectIntent = async (message) => {
-  const system = `Classify the user's message into exactly one category. Respond ONLY with
-JSON: {"intent": "results" | "notifications" | "announcements" | "general"}.
+  const system = `Classify the user's message into exactly one category. Respond with ONLY a
+JSON object, nothing else - no explanation, no reasoning, just: {"intent": "results" | "notifications" | "announcements" | "general"}.
 - "results": anything about grades, SGPA, CGPA, marks, pass/fail, semester result
 - "notifications": anything about attendance policy, internship policy, scholarship, exam policy
 - "announcements": anything about college announcements, notices, events
 - "general": anything else (greetings, general questions, small talk)`;
 
   const response = await complete(system, message, { json: true, temperature: 0 });
-  try {
-    return JSON.parse(response).intent || "general";
-  } catch {
-    return "general";
-  }
+  const parsed = parseJsonLoose(response);
+  return parsed?.intent || "general";
 };
 
 const handleResultsIntent = async (message) => {
@@ -48,10 +77,8 @@ const handleResultsIntent = async (message) => {
   }
 
   const system = `Answer the student's question using ONLY this result context. Never invent grades.
-
-Formatting: if the answer covers more than one student/record, format it as a markdown
-list - one line per record, starting with "- ". If it's about a single student, answer
-in plain sentences instead.
+${FORMATTING_RULE}
+- Exception: if the answer covers more than one student/record, use a "- " list, one line per record.
 
 Context:
 ${context}`;
@@ -65,7 +92,7 @@ const handleNotificationsIntent = async (message) => {
   }).limit(5);
   if (!matches.length) return "I couldn't find a relevant policy notification for that.";
   const context = matches.map((n) => `${n.title}: ${n.content || ""}`).join("\n---\n");
-  const system = `Answer using ONLY this policy/notification context.\n\nContext:\n${context}`;
+  const system = `Answer using ONLY this policy/notification context.${FORMATTING_RULE}\n\nContext:\n${context}`;
   return complete(system, message);
 };
 
@@ -75,14 +102,15 @@ const handleAnnouncementsIntent = async (message) => {
   }).limit(5);
   if (!matches.length) return "I couldn't find a relevant announcement for that.";
   const context = matches.map((a) => `${a.title}: ${a.body || ""}`).join("\n---\n");
-  const system = `Answer using ONLY this announcement context.\n\nContext:\n${context}`;
+  const system = `Answer using ONLY this announcement context.${FORMATTING_RULE}\n\nContext:\n${context}`;
   return complete(system, message);
 };
 
 const handleGeneralIntent = async (message) => {
   const system = `You are NeuralAssist, the AI assistant of the NIT KKR Smart Edu Portal.
-Be concise, friendly, and helpful. If the question needs specific result/policy/announcement
-data you don't have, say the student should ask about it directly.`;
+Be friendly and helpful. If the question needs specific result/policy/announcement data you
+don't have, say the student should ask about it directly instead of guessing.
+${FORMATTING_RULE}`;
   return complete(system, message);
 };
 

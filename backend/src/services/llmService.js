@@ -19,7 +19,7 @@ const getGroq = () => {
 export const complete = async (systemPrompt, userPrompt, opts = {}) => {
   const groq = getGroq();
   const completion = await groq.chat.completions.create({
-    model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+    model: process.env.GROQ_MODEL || "llama-3.1-8b-instant",
     temperature: opts.temperature ?? 0.1,
     response_format: opts.json ? { type: "json_object" } : undefined,
     messages: [

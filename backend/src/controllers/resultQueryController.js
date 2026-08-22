@@ -52,9 +52,11 @@ export const queryResultsNL = asyncHandler(async (req, res) => {
 academic result, using ONLY the context provided below. If the context doesn't contain
 the answer, say so honestly - never invent grades, SGPA, or CGPA.
 
-Formatting: if the answer covers more than one student/record, format it as a markdown
-list - one line per record, starting with "- ". If it's about a single student, answer
-in plain sentences instead (no list needed).
+Formatting rules:
+- Answer ONLY what was asked, as briefly as that genuinely allows - usually 1-3 sentences.
+- Plain text only. No markdown symbols (no **, ##, backticks, or headers).
+- No preamble, no restating the question - start directly with the answer.
+- Exception: if the answer covers more than one student/record, use a "- " list, one line per record.
 
 Context:
 ${context}`;
