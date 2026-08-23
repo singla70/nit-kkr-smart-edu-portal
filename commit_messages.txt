@@ -1,0 +1,50 @@
+feat(chat): unify RAG across all content types, fix personalization/leak bugs, add SPA rewrite
+
+- Add assignments/notifications/announcements/PYQs/study material to chat,
+  which previously only answered result questions (everything else silently
+  fell into the "general" bucket with no data).
+
+- Unify Pinecone into a single content index across all types (result,
+  notification, announcement, assignment, pyq, study_material), tagged via a
+  "type" metadata field, instead of results-only semantic search + ad-hoc
+  Mongo keyword regex for everything else.
+
+- Replace two-LLM-call flow (classify intent -> answer) with keyword-based
+  heuristic routing (no LLM call) + a single answer-generation call. Falls
+  back to one type-unrestricted semantic search when no category confidently
+  matches, and merges multiple matched categories so compound questions
+  ("assignment due + attendance policy") get answered in one pass.
+
+- Fix privacy/accuracy bug: chat now receives req.user and scopes retrieval
+  accordingly -
+    * results: semantic fallback (no roll number in message) is scoped to
+      the logged-in student's own rollNumber - previously an unscoped
+      search could surface a different student's grades.
+    * announcements: filtered by audience (all/students/teachers) - a
+      student could previously see teacher-only posts via chat.
+    * assignments/pyqs/study material: narrowed to the student's own branch
+      when known.
+
+- Restrict the guest chat route (/api/results/chat/guest, no login) to
+  result lookups only. Notifications/announcements/assignments/pyqs/study
+  material now return a "please log in" notice instead of being retrieved,
+  and the ambiguous-query broad fallback search is skipped entirely for
+  guests so it can't fuzzily surface non-public content either.
+
+- Apply the same "ask for roll number instead of guessing" fix to the
+  separate guest result-lookup endpoint (resultQueryController.js), which
+  had the same unscoped-semantic-search leak as the old chat handler.
+
+- Add isVisible-aware Pinecone sync: create/delete/visibility-toggle on
+  Notification, Announcement, Assignment, PYQ, and StudyMaterial now
+  keep their vectors in sync, so hiding content also hides it from chat.
+
+- Add PINECONE_MIN_SCORE-based similarity threshold so a semantic search
+  never hands the LLM its "closest but irrelevant" hits as context.
+
+- Add backfillContentIndex.js script (npm run backfill:content-index) to
+  one-time sync pre-existing Mongo content into the new unified index.
+
+- Add frontend/vercel.json SPA rewrite - direct navigation/refresh on
+  client-side routes (/admin, /student, /teacher) was 404ing because
+  BrowserRouter routes aren't real server paths without a rewrite rule.

@@ -1,4 +1,5 @@
 import asyncHandler from "express-async-handler";
+import { queryResults } from "../services/pineconeService.js";
 import { complete } from "../services/llmService.js";
 import { extractRollNumber } from "../utils/extractRollNumber.js";
 import { buildResultSummaryText } from "../utils/resultSummaryText.js";
@@ -34,16 +35,22 @@ export const queryResultsNL = asyncHandler(async (req, res) => {
     }
   }
 
-  // No roll number in the query - this endpoint is public/guest, so there's
-  // no logged-in identity to safely scope a semantic search to. Guessing via
-  // an unscoped vector search here would risk surfacing a DIFFERENT
-  // student's grades as if they were the asker's own. Ask for the roll
-  // number explicitly instead of guessing.
+  // No exact roll number in the query - fall back to semantic search
+  // (handles a name typed instead of a roll number, or generally phrased
+  // questions). This is the original hybrid design this endpoint was built
+  // for. The safety net against returning an irrelevant/unrelated student's
+  // result is the similarity-score threshold applied inside queryResults()
+  // (PINECONE_MIN_SCORE) - a weak/unrelated match gets dropped instead of
+  // always returning the "closest anyway" result like before.
   if (!context) {
-    return res.json({
-      answer: "Please share your roll number so I can look up the result - I can't guess whose result you mean.",
-      sources: [],
-    });
+    const hits = await queryResults(query, undefined, 5);
+    if (!hits.length) {
+      return res.json({
+        answer: "Sorry, I couldn't find any matching result for that query. Try including a roll number or the student's full name.",
+        sources: [],
+      });
+    }
+    context = hits.map((h) => h.fields?.text || h.text).join("\n---\n");
   }
 
   const system = `You are a helpful assistant answering a student's question about their
