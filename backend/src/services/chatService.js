@@ -70,16 +70,16 @@ const detectCategories = (message) => {
  *   and vice versa; a guest is treated like a student for this purpose)
  * - assignments/pyqs/study material: narrowed to the student's own branch
  *   when known, so a CSE student doesn't get an ECE assignment mixed in
- * - results: narrowed to the logged-in student's own roll number - a
- *   semantic index must never let one student's question surface another
- *   student's grades
+ * - results: intentionally NOT scoped to any one identity - looking up
+ *   another student's result by name/roll number/surname is the whole
+ *   point of the semantic search here (same for guest, student, and
+ *   teacher). Only content that's actually private (notifications meant for
+ *   one audience, etc.) gets scoped; results are treated as public lookup
+ *   data, same as the roll-number filter endpoint always was.
  */
 const buildTypeFilter = (type, user) => {
   const filter = { type: { $eq: type } };
   switch (type) {
-    case "result":
-      if (user?.role === "student" && user.rollNumber) filter.rollNumber = { $eq: user.rollNumber };
-      break;
     case "notification":
       filter.isVisible = { $eq: true };
       break;
@@ -148,19 +148,19 @@ export const handleChatMessage = async (message, user = null) => {
   // guest surface small and predictable.
   const isGuest = !user;
 
-  // Results without an explicit roll number: only ever search semantically
-  // within the asking student's OWN roll number (buildTypeFilter enforces
-  // this). Never run an unscoped semantic search over every student's
-  // grades - that's the one thing this index must not be allowed to leak.
+  // Results without an explicit roll number: semantic search across ALL
+  // results, same for guest/student/teacher - looking up someone else's
+  // result by name, roll number, or surname is the intended feature, not a
+  // bug. The only safety net is the similarity-score threshold
+  // (PINECONE_MIN_SCORE) - a query with no identifying info (e.g. "my
+  // result") won't score well against anything and correctly falls through
+  // to "no matching result found" instead of returning a random one.
   if (wantsResults && !resolvedViaRollNumber) {
-    if (user?.role === "student" && user.rollNumber) {
-      const texts = await retrieveForType("result", message, user);
-      if (texts.length) contextBlocks.push({ type: "result", texts });
+    const texts = await retrieveForType("result", message, user);
+    if (texts.length) {
+      contextBlocks.push({ type: "result", texts });
     } else {
-      contextBlocks.push({
-        type: "result",
-        texts: ["No roll number was provided, so no result can be looked up right now. Ask the student to share their roll number."],
-      });
+      contextBlocks.push({ type: "result", texts: ["No matching result was found for that query."] });
     }
   }
 

@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "seed:admin": "node src/scripts/seedAdmin.js"
+    "seed:admin": "node src/scripts/seedAdmin.js",
+    "backfill:content-index": "node src/scripts/backfillContentIndex.js"
   },
   "dependencies": {
     "express": "^4.19.2",
@@ -27,6 +28,7 @@
     "express-async-handler": "^1.2.0",
     "express-rate-limit": "^7.4.0",
     "morgan": "^1.10.0"
+    
   },
   "devDependencies": {
     "nodemon": "^3.1.4"
