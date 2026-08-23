@@ -1,27 +1,69 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { useNavigate, Link } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
+
+const MIN_WIDTH = 180;
+const MAX_WIDTH = 400;
+const DEFAULT_WIDTH = 256;
 
 /**
  * Shared shell for all 3 role dashboards - a ledger-book layout: a fixed
  * "spine" sidebar (indigo, gold rule) and a parchment page area, so every
  * dashboard reads as a page in the same academic register.
  *
- * Theme (light/dark) is applied globally via ThemeContext (a "dark" class
- * on <html>) - this component just renders the toggle switch, it doesn't
- * own the theme scope itself anymore.
- *
- * Sidebar is always visible on desktop (md+) and an off-canvas drawer on
- * mobile - it starts closed there so it doesn't eat the whole screen, and
- * opens via the hamburger button in the header.
+ * Sidebar behavior:
+ * - Mobile (< md): off-canvas drawer, closed by default, opened via the
+ *   hamburger button in the header (unrelated to desktop collapse/resize
+ *   below - mobile always uses a fixed width when open).
+ * - Desktop (md+): always rendered inline, but can be collapsed to 0 width
+ *   via the toggle button in the header, and resized by dragging its right
+ *   edge. Both the collapsed state and the width persist across sessions.
  */
 export default function DashboardLayout({ title, navItems, activeKey, onNavClick, children }) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const [sidebarOpen, setSidebarOpen] = useState(false); // mobile drawer
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem("sidebarCollapsed") === "true");
+  const [sidebarWidth, setSidebarWidth] = useState(
+    () => Number(localStorage.getItem("sidebarWidth")) || DEFAULT_WIDTH
+  );
+  const resizing = useRef(false);
+
+  useEffect(() => {
+    localStorage.setItem("sidebarCollapsed", String(collapsed));
+  }, [collapsed]);
+
+  useEffect(() => {
+    localStorage.setItem("sidebarWidth", String(sidebarWidth));
+  }, [sidebarWidth]);
+
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!resizing.current) return;
+      setSidebarWidth(Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, e.clientX)));
+    };
+    const onUp = () => {
+      resizing.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, []);
+
+  const startResize = () => {
+    resizing.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  };
 
   const handleLogout = () => {
     logout();
@@ -32,6 +74,8 @@ export default function DashboardLayout({ title, navItems, activeKey, onNavClick
     onNavClick(key);
     setSidebarOpen(false); // auto-close on mobile after picking a section
   };
+
+  const desktopWidthClass = collapsed ? "md:w-0 md:opacity-0 md:overflow-hidden md:border-none" : "md:w-[var(--sidebar-w)]";
 
   return (
     <div className="dashboard-shell h-screen overflow-hidden flex bg-parchment text-ink relative">
@@ -44,7 +88,8 @@ export default function DashboardLayout({ title, navItems, activeKey, onNavClick
       )}
 
       <aside
-        className={`w-64 bg-indigo text-cream flex flex-col shrink-0 h-full fixed md:static inset-y-0 left-0 z-40 transform transition-transform duration-200 md:translate-x-0 ${
+        style={{ "--sidebar-w": `${sidebarWidth}px` }}
+        className={`w-64 ${desktopWidthClass} bg-indigo text-cream flex flex-col shrink-0 h-full fixed md:relative inset-y-0 left-0 z-40 transform transition-[transform,width,opacity] duration-200 md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -69,7 +114,7 @@ export default function DashboardLayout({ title, navItems, activeKey, onNavClick
             <button
               key={item.key}
               onClick={() => handleNavClick(item.key)}
-              className={`w-full text-left px-3 py-2 rounded text-sm font-medium transition-colors duration-150 ${
+              className={`w-full text-left px-3 py-2 rounded text-sm font-medium transition-colors duration-150 whitespace-nowrap ${
                 activeKey === item.key
                   ? "bg-brass/20 text-brass"
                   : "text-cream/80 hover:bg-cream/10"
@@ -87,7 +132,7 @@ export default function DashboardLayout({ title, navItems, activeKey, onNavClick
             aria-label="Toggle light/dark theme"
           >
             <span>{theme === "dark" ? "Dark mode" : "Light mode"}</span>
-            <span className="relative inline-block w-9 h-5 rounded-full bg-cream/20">
+            <span className="relative inline-block w-9 h-5 rounded-full bg-cream/20 shrink-0">
               <span
                 className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-brass transition-transform duration-200 ${
                   theme === "dark" ? "translate-x-4" : ""
@@ -107,6 +152,15 @@ export default function DashboardLayout({ title, navItems, activeKey, onNavClick
             </button>
           </div>
         </div>
+
+        {/* Desktop-only resize handle - drag to change sidebar width */}
+        {!collapsed && (
+          <div
+            onMouseDown={startResize}
+            className="hidden md:block absolute top-0 right-0 h-full w-1.5 cursor-col-resize hover:bg-brass/40 transition-colors"
+            title="Drag to resize"
+          />
+        )}
       </aside>
 
       <main className="flex-1 overflow-y-auto h-full min-w-0">
@@ -117,6 +171,14 @@ export default function DashboardLayout({ title, navItems, activeKey, onNavClick
             aria-label="Open menu"
           >
             <Menu size={22} />
+          </button>
+          <button
+            onClick={() => setCollapsed((c) => !c)}
+            className="hidden md:flex text-ink hover:opacity-70 transition-opacity shrink-0"
+            aria-label={collapsed ? "Show sidebar" : "Hide sidebar"}
+            title={collapsed ? "Show sidebar" : "Hide sidebar"}
+          >
+            {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
           </button>
           <h1 className="font-display text-2xl text-ink animate-slide-up truncate">{title}</h1>
         </header>
