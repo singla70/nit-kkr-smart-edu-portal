@@ -19,15 +19,25 @@ export const studentSignup = asyncHandler(async (req, res) => {
     throw new Error(`Only @${allowedDomain} email addresses can sign up`);
   }
 
-  const existing = await User.findOne({ $or: [{ email }, { rollNumber }] });
-  if (existing) {
+  const normalizedEmail = email.toLowerCase().trim();
+
+  const emailTaken = await User.findOne({ email: normalizedEmail });
+  if (emailTaken) {
     res.status(400);
-    throw new Error("An account with this email or roll number already exists");
+    throw new Error("An account with this email already exists. Try signing in instead.");
+  }
+
+  const rollNumberTaken = await User.findOne({ rollNumber });
+  if (rollNumberTaken) {
+    res.status(400);
+    throw new Error(
+      "An account with this roll number already exists. If this wasn't you, contact your admin."
+    );
   }
 
   const student = await User.create({
     name,
-    email,
+    email: normalizedEmail,
     password,
     rollNumber,
     branch,

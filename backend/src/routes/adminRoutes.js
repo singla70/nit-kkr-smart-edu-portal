@@ -4,6 +4,7 @@ import {
   getTeachers,
   removeTeacher,
   reactivateTeacher,
+  permanentlyDeleteTeacher,
   resetTeacherPassword,
 } from "../controllers/adminController.js";
 import { uploadResultPdf, getExtractionBatches, retryBatches } from "../controllers/resultUploadController.js";
@@ -26,6 +27,8 @@ import {
   deleteResult,
   getStudents,
   removeStudent,
+  reactivateStudent,
+  permanentlyDeleteStudent,
 } from "../controllers/adminContentController.js";
 import {
   getOverview,
@@ -53,6 +56,7 @@ router.post("/teachers", createTeacher);
 router.get("/teachers", getTeachers);
 router.delete("/teachers/:id", removeTeacher);
 router.put("/teachers/:id/reactivate", reactivateTeacher);
+router.delete("/teachers/:id/permanent", permanentlyDeleteTeacher);
 router.put("/teachers/:id/reset-password", resetTeacherPassword);
 
 router.post("/results/upload", uploadPdf.single("file"), uploadResultPdf);
@@ -90,6 +94,8 @@ router.patch("/pyqs/:id/visibility", togglePYQVisibility);
 
 router.get("/students", getStudents);
 router.delete("/students/:id", removeStudent);
+router.put("/students/:id/reactivate", reactivateStudent);
+router.delete("/students/:id/permanent", permanentlyDeleteStudent);
 
 router.get("/analytics/overview", getOverview);
 router.get("/analytics/content-by-department", getContentByDepartment);

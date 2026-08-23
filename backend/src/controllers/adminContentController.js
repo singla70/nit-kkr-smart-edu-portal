@@ -4,6 +4,8 @@ import Notification from "../models/Notification.js";
 import Announcement from "../models/Announcement.js";
 import Result from "../models/Result.js";
 import User from "../models/User.js";
+import Bookmark from "../models/Bookmark.js";
+import Todo from "../models/Todo.js";
 import { upsertResultRecords, deleteResultRecords } from "../services/pineconeService.js";
 import { buildResultSummaryText } from "../utils/resultSummaryText.js";
 
@@ -189,4 +191,44 @@ export const removeStudent = asyncHandler(async (req, res) => {
   student.isActive = false;
   await student.save();
   res.json({ message: "Student deactivated" });
+});
+
+// @desc  Reactivate a previously deactivated student
+// @route PUT /api/admin/students/:id/reactivate
+// @access Private/Admin
+export const reactivateStudent = asyncHandler(async (req, res) => {
+  const student = await User.findOne({ _id: req.params.id, role: "student" });
+  if (!student) {
+    res.status(404);
+    throw new Error("Student not found");
+  }
+  student.isActive = true;
+  await student.save();
+  res.json({ message: "Student reactivated" });
+});
+
+// @desc  Permanently delete a student account - only allowed once already
+//        deactivated, as a safety rail against deleting an active account by
+//        mistake. Also cleans up their bookmarks/todos (private, orphaned
+//        data with no purpose once the account is gone). Their Result
+//        records are untouched - Results are keyed by rollNumber, not by
+//        this account, so deleting the login doesn't remove academic history.
+// @route DELETE /api/admin/students/:id/permanent
+// @access Private/Admin
+export const permanentlyDeleteStudent = asyncHandler(async (req, res) => {
+  const student = await User.findOne({ _id: req.params.id, role: "student" });
+  if (!student) {
+    res.status(404);
+    throw new Error("Student not found");
+  }
+  if (student.isActive) {
+    res.status(400);
+    throw new Error("Deactivate this student before permanently deleting them");
+  }
+  await Promise.all([
+    Bookmark.deleteMany({ user: student._id }),
+    Todo.deleteMany({ user: student._id }),
+  ]);
+  await student.deleteOne();
+  res.json({ message: "Student permanently deleted" });
 });

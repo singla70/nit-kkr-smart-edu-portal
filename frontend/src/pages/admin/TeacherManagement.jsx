@@ -41,6 +41,15 @@ export default function TeacherManagement() {
     load();
   };
 
+  const permanentlyDeleteTeacher = async (id, name) => {
+    if (!window.confirm(`Permanently delete ${name}'s account? This cannot be undone.`)) return;
+    await client.delete(`/admin/teachers/${id}/permanent`);
+    load();
+  };
+
+  const active = teachers.filter((t) => t.isActive);
+  const deactivated = teachers.filter((t) => !t.isActive);
+
   return (
     <div className="space-y-8">
       <form onSubmit={createTeacher} className="bg-surface border border-slate/10 rounded-sm p-6 max-w-xl">
@@ -88,12 +97,12 @@ export default function TeacherManagement() {
       </form>
 
       <div className="bg-surface border border-slate/10 rounded-sm p-6 transition-shadow hover:shadow-md">
-        <h3 className="font-display text-lg text-ink mb-1">All Teachers</h3>
+        <h3 className="font-display text-lg text-ink mb-1">Teachers</h3>
         <p className="ledger-rule mb-4" />
         {loading ? (
           <p className="text-slate text-sm">Loading...</p>
-        ) : teachers.length === 0 ? (
-          <p className="text-slate text-sm">No teachers yet.</p>
+        ) : active.length === 0 ? (
+          <p className="text-slate text-sm">No active teachers.</p>
         ) : (
           <table className="w-full text-sm">
             <thead>
@@ -101,27 +110,60 @@ export default function TeacherManagement() {
                 <th className="py-2">Name</th>
                 <th>Email</th>
                 <th>Department</th>
-                <th>Status</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {teachers.map((t) => (
+              {active.map((t) => (
                 <tr key={t._id} className="border-b border-slate/10">
                   <td className="py-2">{t.name}</td>
                   <td>{t.email}</td>
                   <td>{t.department}</td>
-                  <td className={t.isActive ? "text-sage" : "text-rust"}>{t.isActive ? "active" : "deactivated"}</td>
                   <td>
-                    {t.isActive ? (
-                      <button onClick={() => removeTeacher(t._id)} className="text-rust text-xs hover:underline transition-colors">
-                        Deactivate
-                      </button>
-                    ) : (
-                      <button onClick={() => reactivateTeacher(t._id)} className="text-sage text-xs hover:underline transition-colors">
-                        Reactivate
-                      </button>
-                    )}
+                    <button onClick={() => removeTeacher(t._id)} className="text-rust text-xs hover:underline transition-colors">
+                      Deactivate
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <div className="bg-surface border border-slate/10 rounded-sm p-6 transition-shadow hover:shadow-md">
+        <h3 className="font-display text-lg text-ink mb-1">Deactivated Teachers</h3>
+        <p className="text-xs text-slate mb-4">Can't log in. Reactivate to restore access, or delete permanently.</p>
+        {loading ? (
+          <p className="text-slate text-sm">Loading...</p>
+        ) : deactivated.length === 0 ? (
+          <p className="text-slate text-sm">None.</p>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-wide text-slate border-b border-brass/40">
+                <th className="py-2">Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {deactivated.map((t) => (
+                <tr key={t._id} className="border-b border-slate/10">
+                  <td className="py-2 text-slate">{t.name}</td>
+                  <td className="text-slate">{t.email}</td>
+                  <td className="text-slate">{t.department}</td>
+                  <td className="space-x-3">
+                    <button onClick={() => reactivateTeacher(t._id)} className="text-sage text-xs hover:underline transition-colors">
+                      Reactivate
+                    </button>
+                    <button
+                      onClick={() => permanentlyDeleteTeacher(t._id, t.name)}
+                      className="text-rust text-xs hover:underline transition-colors"
+                    >
+                      Delete Permanently
+                    </button>
                   </td>
                 </tr>
               ))}

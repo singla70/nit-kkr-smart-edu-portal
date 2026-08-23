@@ -72,6 +72,28 @@ export const reactivateTeacher = asyncHandler(async (req, res) => {
   res.json({ message: "Teacher reactivated" });
 });
 
+// @desc  Permanently delete a teacher account - only allowed once already
+//        deactivated (safety rail against deleting an active account by
+//        mistake). Content they posted (study material, assignments,
+//        announcements, PYQs) is left in place, not cascade-deleted - it
+//        stays visible with a missing "posted by" reference rather than
+//        silently removing real academic content.
+// @route DELETE /api/admin/teachers/:id/permanent
+// @access Private/Admin
+export const permanentlyDeleteTeacher = asyncHandler(async (req, res) => {
+  const teacher = await User.findOne({ _id: req.params.id, role: "teacher" });
+  if (!teacher) {
+    res.status(404);
+    throw new Error("Teacher not found");
+  }
+  if (teacher.isActive) {
+    res.status(400);
+    throw new Error("Deactivate this teacher before permanently deleting them");
+  }
+  await teacher.deleteOne();
+  res.json({ message: "Teacher permanently deleted" });
+});
+
 // @desc  Reset a teacher's password
 // @route PUT /api/admin/teachers/:id/reset-password
 // @access Private/Admin
@@ -91,5 +113,4 @@ export const resetTeacherPassword = asyncHandler(async (req, res) => {
   res.json({ message: "Password reset successfully" });
 });
 
-// TODO (next steps): student management, results management, notification/
-// announcement upload, analytics, system overview, site settings.
+// TODO (next steps): analytics, system overview, site settings.
