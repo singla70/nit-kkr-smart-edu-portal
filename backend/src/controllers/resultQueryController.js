@@ -1,5 +1,4 @@
 import asyncHandler from "express-async-handler";
-import { queryResults } from "../services/pineconeService.js";
 import { complete } from "../services/llmService.js";
 import { extractRollNumber } from "../utils/extractRollNumber.js";
 import { buildResultSummaryText } from "../utils/resultSummaryText.js";
@@ -35,17 +34,16 @@ export const queryResultsNL = asyncHandler(async (req, res) => {
     }
   }
 
-  // No roll number in the query, or no direct DB match - fall back to
-  // semantic search (handles name-based and general phrasing well).
+  // No roll number in the query - this endpoint is public/guest, so there's
+  // no logged-in identity to safely scope a semantic search to. Guessing via
+  // an unscoped vector search here would risk surfacing a DIFFERENT
+  // student's grades as if they were the asker's own. Ask for the roll
+  // number explicitly instead of guessing.
   if (!context) {
-    const hits = await queryResults(query, undefined, 5);
-    if (!hits.length) {
-      return res.json({
-        answer: "Sorry, I couldn't find any matching result for that query.",
-        sources: [],
-      });
-    }
-    context = hits.map((h) => h.fields?.text || h.text).join("\n---\n");
+    return res.json({
+      answer: "Please share your roll number so I can look up the result - I can't guess whose result you mean.",
+      sources: [],
+    });
   }
 
   const system = `You are a helpful assistant answering a student's question about their

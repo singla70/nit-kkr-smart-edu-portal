@@ -6,6 +6,13 @@ import Assignment from "../models/Assignment.js";
 import Announcement from "../models/Announcement.js";
 import PYQ from "../models/PYQ.js";
 import Todo from "../models/Todo.js";
+import { upsertContentRecords, deleteContentRecords } from "../services/pineconeService.js";
+import {
+  buildStudyMaterialSummaryText,
+  buildAssignmentSummaryText,
+  buildAnnouncementSummaryText,
+  buildPYQSummaryText,
+} from "../utils/contentSummaryText.js";
 
 // ---------- Study material (notes / lab manuals / PYQs are separate below) ----------
 
@@ -34,6 +41,15 @@ export const uploadStudyMaterial = asyncHandler(async (req, res) => {
     fileUrl,
     uploadedBy: req.user._id,
   });
+
+  await upsertContentRecords([
+    {
+      id: `study_material_${material._id}`,
+      type: "study_material",
+      text: buildStudyMaterialSummaryText(material),
+      metadata: { branch: material.branch, semester: material.semester, subject: material.subject, isVisible: material.isVisible },
+    },
+  ]);
 
   res.status(201).json(material);
 });
@@ -78,6 +94,15 @@ export const uploadPYQ = asyncHandler(async (req, res) => {
     uploadedBy: req.user._id,
   });
 
+  await upsertContentRecords([
+    {
+      id: `pyq_${pyq._id}`,
+      type: "pyq",
+      text: buildPYQSummaryText(pyq),
+      metadata: { branch: pyq.branch, semester: pyq.semester, subject: pyq.subject, year: pyq.year, isVisible: pyq.isVisible },
+    },
+  ]);
+
   res.status(201).json(pyq);
 });
 
@@ -117,6 +142,15 @@ export const postAssignment = asyncHandler(async (req, res) => {
     postedBy: req.user._id,
   });
 
+  await upsertContentRecords([
+    {
+      id: `assignment_${assignment._id}`,
+      type: "assignment",
+      text: buildAssignmentSummaryText(assignment),
+      metadata: { branch: assignment.branch, semester: assignment.semester, subject: assignment.subject, isVisible: assignment.isVisible },
+    },
+  ]);
+
   res.status(201).json(assignment);
 });
 
@@ -138,6 +172,7 @@ export const deleteAssignment = asyncHandler(async (req, res) => {
     throw new Error("Assignment not found");
   }
   await assignment.deleteOne();
+  await deleteContentRecords(`assignment_${assignment._id}`);
   res.json({ message: "Assignment deleted" });
 });
 
@@ -165,6 +200,15 @@ export const postAnnouncement = asyncHandler(async (req, res) => {
     audience: audience || "all",
     postedBy: req.user._id,
   });
+
+  await upsertContentRecords([
+    {
+      id: `announcement_${announcement._id}`,
+      type: "announcement",
+      text: buildAnnouncementSummaryText(announcement),
+      metadata: { audience: announcement.audience, isVisible: announcement.isVisible },
+    },
+  ]);
 
   res.status(201).json(announcement);
 });

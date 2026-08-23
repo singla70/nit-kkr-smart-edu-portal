@@ -6,8 +6,9 @@ import Result from "../models/Result.js";
 import User from "../models/User.js";
 import Bookmark from "../models/Bookmark.js";
 import Todo from "../models/Todo.js";
-import { upsertResultRecords, deleteResultRecords } from "../services/pineconeService.js";
+import { upsertResultRecords, deleteResultRecords, upsertContentRecords, deleteContentRecords } from "../services/pineconeService.js";
 import { buildResultSummaryText } from "../utils/resultSummaryText.js";
+import { buildNotificationSummaryText, buildAnnouncementSummaryText } from "../utils/contentSummaryText.js";
 
 // ---------- Notifications (policy uploads) ----------
 
@@ -31,6 +32,19 @@ export const uploadNotification = asyncHandler(async (req, res) => {
     fileUrl,
     postedBy: req.user._id,
   });
+
+  // Index into the unified semantic search so the chat can find it - a
+  // notification the chat can't retrieve is invisible to the AI assistant
+  // even though it exists in the portal.
+  await upsertContentRecords([
+    {
+      id: `notification_${notification._id}`,
+      type: "notification",
+      text: buildNotificationSummaryText(notification),
+      metadata: { category: notification.category, isVisible: notification.isVisible },
+    },
+  ]);
+
   res.status(201).json(notification);
 });
 
@@ -51,6 +65,7 @@ export const deleteNotification = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("Notification not found");
   }
+  await deleteContentRecords(`notification_${deleted._id}`);
   res.json({ message: "Notification deleted" });
 });
 
@@ -76,6 +91,16 @@ export const uploadAnnouncementAdmin = asyncHandler(async (req, res) => {
     audience: audience || "all",
     postedBy: req.user._id,
   });
+
+  await upsertContentRecords([
+    {
+      id: `announcement_${announcement._id}`,
+      type: "announcement",
+      text: buildAnnouncementSummaryText(announcement),
+      metadata: { audience: announcement.audience, isVisible: announcement.isVisible },
+    },
+  ]);
+
   res.status(201).json(announcement);
 });
 
@@ -96,6 +121,7 @@ export const deleteAnnouncement = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("Announcement not found");
   }
+  await deleteContentRecords(`announcement_${deleted._id}`);
   res.json({ message: "Announcement deleted" });
 });
 

@@ -12,6 +12,10 @@ export const chat = asyncHandler(async (req, res) => {
     throw new Error("message is required");
   }
 
-  const { intent, answer } = await handleChatMessage(message);
+  // req.user is set for the logged-in student/teacher routes; undefined on
+  // the guest route (mounted without `protect`) - handleChatMessage treats
+  // that as an anonymous caller and scopes retrieval accordingly (e.g. never
+  // guesses whose result to show without an explicit roll number).
+  const { intent, answer } = await handleChatMessage(message, req.user);
   res.json({ intent, answer });
 });
