@@ -28,6 +28,13 @@ export const upsertContentRecords = async (records) => {
   });
 };
 
+// Centralizes how we pull a field out of a Pinecone hit, since the shape
+// varies slightly depending on SDK version / call type (fields nested under
+// "fields", or flattened onto the hit directly). Every caller (chatService,
+// resultQueryController) goes through this instead of repeating the same
+// "h.fields?.text || h.text" guess in three different files.
+export const hitField = (hit, field) => hit?.fields?.[field] ?? hit?.[field] ?? hit?.metadata?.[field];
+
 /**
  * @param {string} queryText  natural-language query
  * @param {object} [options]
@@ -47,11 +54,25 @@ export const queryContent = async (queryText, options = {}) => {
       ...(filter ? { filter } : {}),
     },
   });
-  const hits = response?.result?.hits ?? [];
+  const rawHits = response?.result?.hits ?? [];
+
+  // TEMPORARY DIAGNOSTIC LOG - remove once search is confirmed working.
+  // We can't tell, without seeing real output, whether an empty/wrong answer
+  // means (a) Pinecone genuinely found nothing for this filter (e.g. old
+  // vectors still missing the "type" field - run the backfill script), or
+  // (b) it found hits but they're being dropped by the score threshold, or
+  // (c) hits come back in a shape this code isn't reading correctly. This
+  // log makes that visible in the backend's console/deployment logs instead
+  // of guessing again.
+  console.log(
+    `[queryContent] query="${queryText}" filter=${JSON.stringify(filter)} rawHitCount=${rawHits.length}` +
+      (rawHits[0] ? ` firstHitScore=${rawHits[0]._score ?? rawHits[0].score} firstHitRaw=${JSON.stringify(rawHits[0]).slice(0, 300)}` : "")
+  );
+
   // Score field name has varied across Pinecone SDK versions (_score vs score)
   // - check both rather than silently treating an unscored hit as a 0 (which
   // would wrongly drop it) or Infinity (which would wrongly keep it).
-  return hits.filter((h) => {
+  return rawHits.filter((h) => {
     const score = h._score ?? h.score;
     return score === undefined || score >= minScore;
   });

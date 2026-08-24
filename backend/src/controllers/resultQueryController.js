@@ -1,5 +1,5 @@
 import asyncHandler from "express-async-handler";
-import { queryResults } from "../services/pineconeService.js";
+import { queryResults, hitField } from "../services/pineconeService.js";
 import { complete } from "../services/llmService.js";
 import { extractRollNumber } from "../utils/extractRollNumber.js";
 import { buildResultSummaryText } from "../utils/resultSummaryText.js";
@@ -50,7 +50,7 @@ export const queryResultsNL = asyncHandler(async (req, res) => {
         sources: [],
       });
     }
-    context = hits.map((h) => h.fields?.text || h.text).join("\n---\n");
+    context = hits.map((h) => hitField(h, "text")).join("\n---\n");
   }
 
   const system = `You are a helpful assistant answering a student's question about their
