@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import client from "../../api/client";
+import Switch from "../../components/Switch";
+import { FolderOpen, ExternalLink } from "lucide-react";
 
 const SECTIONS = [
   { key: "studyMaterial", label: "Study Material", endpoint: "study-material" },
@@ -37,36 +39,34 @@ export default function MyUploadsPanel() {
           <h3 className="font-display text-lg text-ink mb-1">{s.label}</h3>
           <p className="ledger-rule mb-4" />
           {data[s.key].length === 0 ? (
-            <p className="text-slate text-sm">Nothing uploaded yet.</p>
+            <div className="flex flex-col items-center text-center py-8 text-slate">
+              <FolderOpen size={24} className="mb-2 opacity-40" />
+              <p className="text-sm">Nothing uploaded yet.</p>
+            </div>
           ) : (
             <ul className="space-y-2 text-sm">
               {data[s.key].map((item) => (
-                <li key={item._id} className="flex items-center justify-between border-b border-slate/10 pb-2 gap-3">
-                  <span className={item.isVisible === false ? "text-slate line-through" : ""}>
+                <li key={item._id} className="flex items-center justify-between border-b border-slate/10 pb-2.5 gap-3">
+                  <span className={item.isVisible === false ? "text-slate line-through" : "text-ink"}>
                     {item.title || item.subject}
                   </span>
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-4 shrink-0">
                     <span className="text-slate text-xs">{new Date(item.createdAt).toLocaleDateString()}</span>
                     {(item.fileUrl || item.attachmentUrl) && (
                       <a
                         href={item.fileUrl || item.attachmentUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-link text-xs hover:underline transition-colors"
+                        className="inline-flex items-center gap-1 text-link text-xs hover:underline transition-colors"
                       >
-                        View
+                        View <ExternalLink size={12} />
                       </a>
                     )}
-                    <button
-                      onClick={() => toggleVisibility(s.endpoint, item._id, item.isVisible !== false)}
-                      className={`text-xs px-2 py-1 rounded transition-colors ${
-                        item.isVisible === false
-                          ? "bg-sage/10 text-sage hover:bg-sage/20"
-                          : "bg-slate/10 text-slate hover:bg-slate/20"
-                      }`}
-                    >
-                      {item.isVisible === false ? "Show" : "Hide"}
-                    </button>
+                    <Switch
+                      checked={item.isVisible !== false}
+                      onChange={() => toggleVisibility(s.endpoint, item._id, item.isVisible !== false)}
+                      label={item.isVisible === false ? "Hidden" : "Visible"}
+                    />
                   </div>
                 </li>
               ))}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { SearchX, Search } from "lucide-react";
 import client from "../../api/client";
 
 /**
@@ -41,7 +42,7 @@ export default function FilterListPanel({ endpoint, fields, renderRow, headers, 
   }, []);
 
   return (
-    <div className="bg-surface border border-slate/10 rounded-sm p-6 transition-shadow hover:shadow-md">
+    <div className="bg-surface border border-slate/10 rounded-sm p-6 hover:shadow-md transition-shadow">
       {fields.length > 0 && (
         <form onSubmit={search} className={`grid gap-3 mb-4`} style={{ gridTemplateColumns: `repeat(${fields.length}, 1fr)` }}>
           {fields.map((f) => (
@@ -51,14 +52,11 @@ export default function FilterListPanel({ endpoint, fields, renderRow, headers, 
               placeholder={f.label}
               value={filters[f.key]}
               onChange={(e) => setFilters({ ...filters, [f.key]: e.target.value })}
-              className="px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm"
+              className="field"
             />
           ))}
-          <button
-            type="submit"
-            disabled={loading}
-            className="col-span-full sm:col-span-1 bg-indigo text-cream px-4 py-2 rounded text-sm font-medium disabled:opacity-50 w-fit"
-          >
+          <button type="submit" disabled={loading} className="btn-primary col-span-full sm:col-span-1 w-fit">
+            <Search size={14} />
             {loading ? "Searching..." : "Search"}
           </button>
         </form>
@@ -66,23 +64,39 @@ export default function FilterListPanel({ endpoint, fields, renderRow, headers, 
 
       {error && <p className="text-rust text-sm mb-4 bg-rust/10 px-3 py-2 rounded">{error}</p>}
 
-      {rows === null ? (
-        !autoLoad && <p className="text-slate text-sm">Use the filters above to search.</p>
+      {loading && rows === null ? (
+        // Skeleton rows instead of a bare "Loading..." line - keeps the
+        // panel's height stable so the page doesn't jump when data lands.
+        <div className="space-y-3 animate-pulse">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-9 bg-parchment2/70 rounded" />
+          ))}
+        </div>
+      ) : rows === null ? (
+        !autoLoad && (
+          <div className="flex flex-col items-center text-center py-10 text-slate">
+            <Search size={28} className="mb-3 opacity-40" />
+            <p className="text-sm">Use the filters above to search.</p>
+          </div>
+        )
       ) : rows.length === 0 ? (
-        <p className="text-slate text-sm">No results found.</p>
+        <div className="flex flex-col items-center text-center py-10 text-slate">
+          <SearchX size={28} className="mb-3 opacity-40" />
+          <p className="text-sm">No results found.</p>
+        </div>
       ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-slate border-b border-brass/40">
-              {headers.map((h) => (
-                <th key={h} className="py-2">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>{rows.map(renderRow)}</tbody>
-        </table>
+        <div className="overflow-x-auto">
+          <table className="data-table w-full text-sm">
+            <thead>
+              <tr>
+                {headers.map((h) => (
+                  <th key={h}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>{rows.map(renderRow)}</tbody>
+          </table>
+        </div>
       )}
     </div>
   );

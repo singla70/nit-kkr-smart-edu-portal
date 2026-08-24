@@ -7,17 +7,28 @@ import MyResultsPanel from "./MyResultsPanel";
 import PYQsPanel from "./PYQsPanel";
 import BookmarksPanel from "./BookmarksPanel";
 import BookmarkButton from "../../components/BookmarkButton";
+import {
+  MessageSquareText,
+  GraduationCap,
+  FileQuestion,
+  Library,
+  ClipboardList,
+  Megaphone,
+  Bell,
+  Bookmark,
+  CheckSquare,
+} from "lucide-react";
 
 const NAV = [
-  { key: "chat", label: "AI Assistant" },
-  { key: "results", label: "My Results" },
-  { key: "pyqs", label: "Search PYQs" },
-  { key: "study", label: "Study Resources" },
-  { key: "assignments", label: "Assignments" },
-  { key: "announcements", label: "Announcements" },
-  { key: "notifications", label: "Notifications" },
-  { key: "bookmarks", label: "Bookmarks" },
-  { key: "todo", label: "To-Do" },
+  { key: "chat", label: "AI Assistant", icon: MessageSquareText },
+  { key: "results", label: "My Results", icon: GraduationCap },
+  { key: "pyqs", label: "Search PYQs", icon: FileQuestion },
+  { key: "study", label: "Study Resources", icon: Library },
+  { key: "assignments", label: "Assignments", icon: ClipboardList },
+  { key: "announcements", label: "Announcements", icon: Megaphone },
+  { key: "notifications", label: "Notifications", icon: Bell },
+  { key: "bookmarks", label: "Bookmarks", icon: Bookmark },
+  { key: "todo", label: "To-Do", icon: CheckSquare },
 ];
 
 export default function StudentDashboard() {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Bookmark, Trash2 } from "lucide-react";
 import client from "../../api/client";
 
 const SECTION_LABELS = {
@@ -36,8 +37,9 @@ export default function BookmarksPanel() {
   if (loading) return <p className="text-slate text-sm">Loading...</p>;
   if (!bookmarks || bookmarks.length === 0) {
     return (
-      <div className="bg-surface border border-slate/10 rounded-sm p-6">
-        <p className="text-slate text-sm">
+      <div className="bg-surface border border-slate/10 rounded-sm p-10 flex flex-col items-center text-center text-slate">
+        <Bookmark size={28} className="mb-3 opacity-40" />
+        <p className="text-sm">
           Nothing saved yet. Look for the bookmark icon on PYQs, study material, announcements, and
           notifications.
         </p>
@@ -71,8 +73,8 @@ export default function BookmarksPanel() {
                       View
                     </a>
                   )}
-                  <button onClick={() => remove(b.bookmarkId)} className="text-rust text-xs hover:underline transition-colors">
-                    Remove
+                  <button onClick={() => remove(b.bookmarkId)} className="text-rust hover:opacity-70 transition-opacity" aria-label="Remove bookmark">
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </li>

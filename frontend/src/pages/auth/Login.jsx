@@ -66,7 +66,7 @@ export default function Login() {
             required
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="w-full mb-4 px-3 py-2 bg-surface border border-slate/20 rounded font-body text-ink focus:outline-none focus:ring-2 focus:ring-brass transition-shadow"
+            className="field mb-4"
             placeholder="you@nitkkr.ac.in"
           />
 
@@ -76,14 +76,14 @@ export default function Login() {
             required
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
-            className="w-full mb-6 px-3 py-2 bg-surface border border-slate/20 rounded font-body text-ink focus:outline-none focus:ring-2 focus:ring-brass transition-shadow"
+            className="field mb-6"
             placeholder="••••••••"
           />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo text-cream py-2.5 rounded font-medium hover:bg-indigo/90 transition-colors disabled:opacity-50"
+            className="btn-primary w-full py-2.5"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>

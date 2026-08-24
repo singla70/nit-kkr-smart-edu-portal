@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Plus, Trash2, ListTodo } from "lucide-react";
 import client from "../../api/client";
 
 /** Identical for student and teacher - only the endpoint prop differs. */
@@ -44,9 +45,10 @@ export default function TodoPanel({ endpoint }) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Add a task..."
-          className="flex-1 px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brass"
+          className="field flex-1"
         />
-        <button type="submit" className="bg-indigo text-cream px-4 py-2 rounded text-sm font-medium">
+        <button type="submit" className="btn-primary">
+          <Plus size={14} />
           Add
         </button>
       </form>
@@ -54,7 +56,10 @@ export default function TodoPanel({ endpoint }) {
       {loading ? (
         <p className="text-slate text-sm">Loading...</p>
       ) : todos.length === 0 ? (
-        <p className="text-slate text-sm">Nothing here yet.</p>
+        <div className="flex flex-col items-center text-center py-8 text-slate">
+          <ListTodo size={24} className="mb-2 opacity-40" />
+          <p className="text-sm">Nothing here yet.</p>
+        </div>
       ) : (
         <ul className="space-y-2">
           {todos.map((t) => (
@@ -63,9 +68,10 @@ export default function TodoPanel({ endpoint }) {
               <span className={`flex-1 text-sm ${t.done ? "line-through text-slate" : "text-ink"}`}>{t.text}</span>
               <button
                 onClick={() => remove(t._id)}
-                className="text-rust text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                className="text-rust opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label="Remove task"
               >
-                Remove
+                <Trash2 size={14} />
               </button>
             </li>
           ))}

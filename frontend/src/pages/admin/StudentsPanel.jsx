@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import client from "../../api/client";
+import Badge from "../../components/Badge";
+import { UserX, RotateCcw, Trash2 } from "lucide-react";
 
 export default function StudentsPanel() {
   const [students, setStudents] = useState([]);
@@ -45,32 +47,39 @@ export default function StudentsPanel() {
         {active.length === 0 ? (
           <p className="text-slate text-sm">No active students.</p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate border-b border-brass/40">
-                <th className="py-2">Name</th>
-                <th>Roll</th>
-                <th>Email</th>
-                <th>Branch</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {active.map((s) => (
-                <tr key={s._id} className="border-b border-slate/10">
-                  <td className="py-2">{s.name}</td>
-                  <td className="font-mono">{s.rollNumber}</td>
-                  <td>{s.email}</td>
-                  <td>{s.branch}</td>
-                  <td>
-                    <button onClick={() => deactivate(s._id)} className="text-rust text-xs hover:underline transition-colors">
-                      Deactivate
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="data-table w-full text-sm">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Roll</th>
+                  <th>Email</th>
+                  <th>Branch</th>
+                  <th>Status</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {active.map((s) => (
+                  <tr key={s._id}>
+                    <td>{s.name}</td>
+                    <td className="font-mono">{s.rollNumber}</td>
+                    <td>{s.email}</td>
+                    <td>{s.branch}</td>
+                    <td>
+                      <Badge variant="success">Active</Badge>
+                    </td>
+                    <td>
+                      <button onClick={() => deactivate(s._id)} className="btn-ghost text-rust hover:bg-rust/10">
+                        <UserX size={14} />
+                        Deactivate
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -80,38 +89,46 @@ export default function StudentsPanel() {
         {deactivated.length === 0 ? (
           <p className="text-slate text-sm">None.</p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate border-b border-brass/40">
-                <th className="py-2">Name</th>
-                <th>Roll</th>
-                <th>Email</th>
-                <th>Branch</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {deactivated.map((s) => (
-                <tr key={s._id} className="border-b border-slate/10">
-                  <td className="py-2 text-slate">{s.name}</td>
-                  <td className="font-mono text-slate">{s.rollNumber}</td>
-                  <td className="text-slate">{s.email}</td>
-                  <td className="text-slate">{s.branch}</td>
-                  <td className="space-x-3">
-                    <button onClick={() => reactivate(s._id)} className="text-sage text-xs hover:underline transition-colors">
-                      Reactivate
-                    </button>
-                    <button
-                      onClick={() => permanentlyDelete(s._id, s.name)}
-                      className="text-rust text-xs hover:underline transition-colors"
-                    >
-                      Delete Permanently
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="data-table w-full text-sm">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Roll</th>
+                  <th>Email</th>
+                  <th>Branch</th>
+                  <th>Status</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {deactivated.map((s) => (
+                  <tr key={s._id}>
+                    <td className="text-slate">{s.name}</td>
+                    <td className="font-mono text-slate">{s.rollNumber}</td>
+                    <td className="text-slate">{s.email}</td>
+                    <td className="text-slate">{s.branch}</td>
+                    <td>
+                      <Badge variant="neutral">Deactivated</Badge>
+                    </td>
+                    <td className="space-x-1 whitespace-nowrap">
+                      <button onClick={() => reactivate(s._id)} className="btn-ghost text-sage hover:bg-sage/10">
+                        <RotateCcw size={14} />
+                        Reactivate
+                      </button>
+                      <button
+                        onClick={() => permanentlyDelete(s._id, s.name)}
+                        className="btn-ghost text-rust hover:bg-rust/10"
+                      >
+                        <Trash2 size={14} />
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

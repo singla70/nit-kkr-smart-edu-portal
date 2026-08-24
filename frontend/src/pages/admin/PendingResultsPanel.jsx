@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import client from "../../api/client";
+import Badge from "../../components/Badge";
+import { CheckCircle2 } from "lucide-react";
 
 // Human-readable labels for the flag codes computed in
 // backend/src/utils/resultFlags.js - keep this list in sync with that file.
@@ -117,8 +119,9 @@ export default function PendingResultsPanel() {
           <button
             onClick={() => commitTicked(false)}
             disabled={committing || !tickedCount}
-            className="bg-indigo text-cream px-4 py-2 rounded text-sm font-medium disabled:opacity-50 hover:bg-indigo/90 transition-colors"
+            className="btn-primary"
           >
+            <CheckCircle2 size={14} />
             {committing ? "Committing..." : `Commit ${tickedCount} ticked to live results`}
           </button>
         </div>
@@ -141,10 +144,11 @@ export default function PendingResultsPanel() {
       )}
 
       {pending && pending.length > 0 && (
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="data-table w-full text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-slate border-b border-brass/40">
-              <th className="py-2 w-8"></th>
+            <tr>
+              <th className="w-8"></th>
               <th>Roll</th>
               <th>Name</th>
               <th>Branch</th>
@@ -241,8 +245,8 @@ export default function PendingResultsPanel() {
                   </td>
                 </tr>
               ) : (
-                <tr key={r._id} className={`border-b border-slate/10 ${r.flagged ? "bg-rust/5" : ""}`}>
-                  <td className="py-2">
+                <tr key={r._id} className={r.flagged ? "bg-rust/5" : ""}>
+                  <td>
                     <input type="checkbox" checked={r.verified} onChange={() => toggleTick(r)} title="Tick to include in next commit" />
                   </td>
                   <td className="font-mono">{r.rollNumber || <span className="text-rust">missing</span>}</td>
@@ -251,7 +255,9 @@ export default function PendingResultsPanel() {
                   <td>{r.semester}</td>
                   <td>{r.sgpa}</td>
                   <td>{r.cgpa}</td>
-                  <td className={r.status === "pass" ? "text-sage" : "text-rust"}>{r.status}</td>
+                  <td>
+                    <Badge variant={r.status === "pass" ? "success" : "danger"}>{r.status}</Badge>
+                  </td>
                   <td className="text-xs">{r.reappearSubjects || "N/A"}</td>
                   <td className="max-w-[220px]">
                     {r.flagged ? (
@@ -261,7 +267,7 @@ export default function PendingResultsPanel() {
                         ))}
                       </ul>
                     ) : (
-                      <span className="text-xs text-sage">clean</span>
+                      <Badge variant="success">clean</Badge>
                     )}
                   </td>
                   <td className="space-x-2 whitespace-nowrap">
@@ -277,6 +283,7 @@ export default function PendingResultsPanel() {
             )}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

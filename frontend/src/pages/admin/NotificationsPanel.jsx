@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import client from "../../api/client";
+import Switch from "../../components/Switch";
+import { Trash2, Send } from "lucide-react";
 
 export default function NotificationsPanel() {
   const [items, setItems] = useState([]);
@@ -58,12 +60,12 @@ export default function NotificationsPanel() {
           required
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
-          className="w-full px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm mb-3"
+          className="field mb-3"
         />
         <select
           value={form.category}
           onChange={(e) => setForm({ ...form, category: e.target.value })}
-          className="w-full px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm mb-3"
+          className="field mb-3"
         >
           {["attendance", "internship", "scholarship", "exam", "general"].map((c) => (
             <option key={c} value={c}>
@@ -76,10 +78,11 @@ export default function NotificationsPanel() {
           value={form.content}
           onChange={(e) => setForm({ ...form, content: e.target.value })}
           rows={3}
-          className="w-full px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm mb-3"
+          className="field mb-3"
         />
         <input type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files[0])} className="text-sm mb-4 block" />
-        <button type="submit" className="bg-indigo text-cream px-5 py-2 rounded text-sm font-medium">
+        <button type="submit" className="btn-primary">
+          <Send size={14} />
           Post
         </button>
       </form>
@@ -92,26 +95,23 @@ export default function NotificationsPanel() {
         ) : (
           <ul className="space-y-2 text-sm">
             {items.map((n) => (
-              <li key={n._id} className="flex justify-between items-center border-b border-slate/10 pb-2 gap-3">
-                <span className={n.isVisible === false ? "text-slate line-through" : ""}>
+              <li key={n._id} className="flex justify-between items-center border-b border-slate/10 pb-2.5 gap-3">
+                <span className={n.isVisible === false ? "text-slate line-through" : "text-ink"}>
                   {n.title} <span className="text-xs text-slate">({n.category})</span>
                 </span>
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-4 shrink-0">
                   {n.fileUrl && (
                     <a href={n.fileUrl} target="_blank" rel="noreferrer" className="text-link text-xs hover:underline transition-colors">
                       View
                     </a>
                   )}
-                  <button
-                    onClick={() => toggleVisibility(n._id, n.isVisible !== false)}
-                    className={`text-xs px-2 py-1 rounded transition-colors ${
-                      n.isVisible === false ? "bg-sage/10 text-sage hover:bg-sage/20" : "bg-slate/10 text-slate hover:bg-slate/20"
-                    }`}
-                  >
-                    {n.isVisible === false ? "Show" : "Hide"}
-                  </button>
-                  <button onClick={() => remove(n._id)} className="text-rust text-xs hover:underline transition-colors">
-                    Delete
+                  <Switch
+                    checked={n.isVisible !== false}
+                    onChange={() => toggleVisibility(n._id, n.isVisible !== false)}
+                    label={n.isVisible === false ? "Hidden" : "Visible"}
+                  />
+                  <button onClick={() => remove(n._id)} className="btn-ghost text-rust hover:bg-rust/10">
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </li>

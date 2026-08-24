@@ -81,12 +81,12 @@ export default function ChatPanel({ endpoint, placeholder, prefillMessage, onPre
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={placeholder}
-          className="flex-1 px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brass"
+          className="field flex-1"
         />
         <button
           type="submit"
           disabled={loading}
-          className="bg-indigo text-cream px-5 py-2 rounded text-sm font-medium disabled:opacity-50"
+          className="btn-primary"
         >
           Send
         </button>

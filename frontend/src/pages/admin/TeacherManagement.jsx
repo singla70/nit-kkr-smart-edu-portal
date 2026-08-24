@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import client from "../../api/client";
+import Badge from "../../components/Badge";
+import { UserPlus, UserX, RotateCcw, Trash2 } from "lucide-react";
 
 export default function TeacherManagement() {
   const [teachers, setTeachers] = useState([]);
@@ -66,7 +68,7 @@ export default function TeacherManagement() {
             required
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm"
+            className="field"
           />
           <input
             placeholder="Email"
@@ -74,7 +76,7 @@ export default function TeacherManagement() {
             required
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm"
+            className="field"
           />
           <input
             placeholder="Password"
@@ -82,16 +84,17 @@ export default function TeacherManagement() {
             required
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
-            className="px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm"
+            className="field"
           />
           <input
             placeholder="Department"
             value={form.department}
             onChange={(e) => setForm({ ...form, department: e.target.value })}
-            className="px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm"
+            className="field"
           />
         </div>
-        <button type="submit" className="bg-indigo text-cream px-5 py-2 rounded text-sm font-medium">
+        <button type="submit" className="btn-primary">
+          <UserPlus size={14} />
           Create Teacher
         </button>
       </form>
@@ -104,30 +107,37 @@ export default function TeacherManagement() {
         ) : active.length === 0 ? (
           <p className="text-slate text-sm">No active teachers.</p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate border-b border-brass/40">
-                <th className="py-2">Name</th>
-                <th>Email</th>
-                <th>Department</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {active.map((t) => (
-                <tr key={t._id} className="border-b border-slate/10">
-                  <td className="py-2">{t.name}</td>
-                  <td>{t.email}</td>
-                  <td>{t.department}</td>
-                  <td>
-                    <button onClick={() => removeTeacher(t._id)} className="text-rust text-xs hover:underline transition-colors">
-                      Deactivate
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="data-table w-full text-sm">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Department</th>
+                  <th>Status</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {active.map((t) => (
+                  <tr key={t._id}>
+                    <td>{t.name}</td>
+                    <td>{t.email}</td>
+                    <td>{t.department}</td>
+                    <td>
+                      <Badge variant="success">Active</Badge>
+                    </td>
+                    <td>
+                      <button onClick={() => removeTeacher(t._id)} className="btn-ghost text-rust hover:bg-rust/10">
+                        <UserX size={14} />
+                        Deactivate
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -139,36 +149,44 @@ export default function TeacherManagement() {
         ) : deactivated.length === 0 ? (
           <p className="text-slate text-sm">None.</p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate border-b border-brass/40">
-                <th className="py-2">Name</th>
-                <th>Email</th>
-                <th>Department</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {deactivated.map((t) => (
-                <tr key={t._id} className="border-b border-slate/10">
-                  <td className="py-2 text-slate">{t.name}</td>
-                  <td className="text-slate">{t.email}</td>
-                  <td className="text-slate">{t.department}</td>
-                  <td className="space-x-3">
-                    <button onClick={() => reactivateTeacher(t._id)} className="text-sage text-xs hover:underline transition-colors">
-                      Reactivate
-                    </button>
-                    <button
-                      onClick={() => permanentlyDeleteTeacher(t._id, t.name)}
-                      className="text-rust text-xs hover:underline transition-colors"
-                    >
-                      Delete Permanently
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="data-table w-full text-sm">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Department</th>
+                  <th>Status</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {deactivated.map((t) => (
+                  <tr key={t._id}>
+                    <td className="text-slate">{t.name}</td>
+                    <td className="text-slate">{t.email}</td>
+                    <td className="text-slate">{t.department}</td>
+                    <td>
+                      <Badge variant="neutral">Deactivated</Badge>
+                    </td>
+                    <td className="space-x-1 whitespace-nowrap">
+                      <button onClick={() => reactivateTeacher(t._id)} className="btn-ghost text-sage hover:bg-sage/10">
+                        <RotateCcw size={14} />
+                        Reactivate
+                      </button>
+                      <button
+                        onClick={() => permanentlyDeleteTeacher(t._id, t.name)}
+                        className="btn-ghost text-rust hover:bg-rust/10"
+                      >
+                        <Trash2 size={14} />
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

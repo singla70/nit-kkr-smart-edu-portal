@@ -14,6 +14,7 @@ import Announcement from "../models/Announcement.js";
 import Assignment from "../models/Assignment.js";
 import PYQ from "../models/PYQ.js";
 import StudyMaterial from "../models/StudyMaterial.js";
+import Result from "../models/Result.js";
 import { upsertContentRecords } from "../services/pineconeService.js";
 import {
   buildNotificationSummaryText,
@@ -22,6 +23,7 @@ import {
   buildPYQSummaryText,
   buildStudyMaterialSummaryText,
 } from "../utils/contentSummaryText.js";
+import { buildResultSummaryText } from "../utils/resultSummaryText.js";
 
 dotenv.config();
 
@@ -53,6 +55,20 @@ const syncCollection = async (label, docs, type, buildText, buildMetadata) => {
 
 const run = async () => {
   await connectDB();
+
+  // Results are the most important one to backfill: any result committed
+  // BEFORE the unified-index change was upserted to Pinecone WITHOUT a
+  // "type" metadata field. Every query now filters on type="result", so
+  // those older vectors were silently invisible to search - re-upserting
+  // with the same deterministic id (result_<mongoId>) overwrites them in
+  // place with the correct metadata, fixing this without creating duplicates.
+  await syncCollection(
+    "Results",
+    await Result.find(),
+    "result",
+    buildResultSummaryText,
+    (d) => ({ rollNumber: d.rollNumber, branch: d.branch, semester: d.semester })
+  );
 
   await syncCollection(
     "Notifications",

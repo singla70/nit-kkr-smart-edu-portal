@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Search } from "lucide-react";
 import client from "../../api/client";
 import BookmarkButton from "../../components/BookmarkButton";
 
@@ -44,10 +45,11 @@ export default function PYQsPanel({ onAskAI }) {
             placeholder={key[0].toUpperCase() + key.slice(1)}
             value={filters[key]}
             onChange={(e) => setFilters({ ...filters, [key]: e.target.value })}
-            className="px-3 py-2 border border-slate/20 rounded text-sm bg-surface text-ink"
+            className="field"
           />
         ))}
-        <button type="submit" disabled={loading} className="col-span-full sm:col-span-1 bg-indigo text-cream px-4 py-2 rounded text-sm font-medium disabled:opacity-50 w-fit">
+        <button type="submit" disabled={loading} className="btn-primary col-span-full sm:col-span-1 w-fit">
+          <Search size={14} />
           {loading ? "Searching..." : "Search"}
         </button>
       </form>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { UploadCloud } from "lucide-react";
 import client from "../../api/client";
 
 /**
@@ -50,7 +51,7 @@ export default function UploadForm({ endpoint, fields, fileRequired, submitLabel
             required={!!f.required}
             value={values[f.key]}
             onChange={(e) => setValues({ ...values, [f.key]: e.target.value })}
-            className="w-full px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brass"
+            className="field"
           />
         </div>
       ))}
@@ -68,11 +69,8 @@ export default function UploadForm({ endpoint, fields, fileRequired, submitLabel
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="bg-indigo text-cream px-5 py-2 rounded text-sm font-medium disabled:opacity-50"
-      >
+      <button type="submit" disabled={loading} className="btn-primary">
+        <UploadCloud size={14} />
         {loading ? "Submitting..." : submitLabel}
       </button>
     </form>

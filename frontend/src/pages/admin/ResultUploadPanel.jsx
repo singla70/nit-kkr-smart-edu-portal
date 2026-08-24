@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { UploadCloud } from "lucide-react";
 import client from "../../api/client";
+import Badge from "../../components/Badge";
 
 export default function ResultUploadPanel() {
   const [form, setForm] = useState({ branch: "", semester: "", year: "" });
@@ -102,7 +104,7 @@ export default function ResultUploadPanel() {
             required
             value={form.branch}
             onChange={(e) => setForm({ ...form, branch: e.target.value })}
-            className="px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm"
+            className="field"
           />
           <input
             placeholder="Semester"
@@ -110,20 +112,21 @@ export default function ResultUploadPanel() {
             required
             value={form.semester}
             onChange={(e) => setForm({ ...form, semester: e.target.value })}
-            className="px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm"
+            className="field"
           />
           <input
             placeholder="Year"
             type="number"
             value={form.year}
             onChange={(e) => setForm({ ...form, year: e.target.value })}
-            className="px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm"
+            className="field"
           />
         </div>
 
         <input type="file" accept="application/pdf" required onChange={(e) => setFile(e.target.files[0])} className="text-sm mb-4 block" />
 
-        <button type="submit" disabled={loading} className="bg-indigo text-cream px-5 py-2 rounded text-sm font-medium disabled:opacity-50">
+        <button type="submit" disabled={loading} className="btn-primary">
+          <UploadCloud size={14} />
           {loading ? "Extracting... this may take a while" : "Upload & Extract"}
         </button>
       </form>
@@ -134,10 +137,11 @@ export default function ResultUploadPanel() {
         {batches.length === 0 ? (
           <p className="text-slate text-sm">No batches yet.</p>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="data-table w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate border-b border-brass/40">
-                <th className="py-2">Branch</th>
+              <tr>
+                <th>Branch</th>
                 <th>Sem</th>
                 <th>Students</th>
                 <th>Status</th>
@@ -146,22 +150,21 @@ export default function ResultUploadPanel() {
             </thead>
             <tbody>
               {batches.map((b) => (
-                <tr key={b._id} className="border-b border-slate/10">
-                  <td className="py-2">{b.branch}</td>
+                <tr key={b._id}>
+                  <td>{b.branch}</td>
                   <td>{b.semester}</td>
                   <td>{b.rollNumbersInBatch?.length}</td>
-                  <td
-                    className={
-                      b.status === "completed" ? "text-sage" : b.status === "failed" ? "text-rust" : "text-slate"
-                    }
-                  >
-                    {b.status}
+                  <td>
+                    <Badge variant={b.status === "completed" ? "success" : b.status === "failed" ? "danger" : "neutral"}>
+                      {b.status}
+                    </Badge>
                   </td>
                   <td className="text-xs text-rust">{b.errorMessage}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

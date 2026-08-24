@@ -4,15 +4,16 @@ import ChatPanel from "../shared/ChatPanel";
 import TodoPanel from "../shared/TodoPanel";
 import UploadForm from "../shared/UploadForm";
 import MyUploadsPanel from "./MyUploadsPanel";
+import { MessageSquareText, UploadCloud, FileQuestion, ClipboardList, Megaphone, FolderOpen, CheckSquare } from "lucide-react";
 
 const NAV = [
-  { key: "chat", label: "AI Assistant" },
-  { key: "material", label: "Upload Material" },
-  { key: "pyqs", label: "Upload PYQ" },
-  { key: "assignments", label: "Post Assignment" },
-  { key: "announcements", label: "Post Announcement" },
-  { key: "uploads", label: "My Uploads" },
-  { key: "todo", label: "To-Do" },
+  { key: "chat", label: "AI Assistant", icon: MessageSquareText },
+  { key: "material", label: "Upload Material", icon: UploadCloud },
+  { key: "pyqs", label: "Upload PYQ", icon: FileQuestion },
+  { key: "assignments", label: "Post Assignment", icon: ClipboardList },
+  { key: "announcements", label: "Post Announcement", icon: Megaphone },
+  { key: "uploads", label: "My Uploads", icon: FolderOpen },
+  { key: "todo", label: "To-Do", icon: CheckSquare },
 ];
 
 export default function TeacherDashboard() {

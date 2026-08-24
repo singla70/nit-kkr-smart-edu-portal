@@ -114,13 +114,14 @@ export default function DashboardLayout({ title, navItems, activeKey, onNavClick
             <button
               key={item.key}
               onClick={() => handleNavClick(item.key)}
-              className={`w-full text-left px-3 py-2 rounded text-sm font-medium transition-colors duration-150 whitespace-nowrap ${
+              className={`w-full flex items-center gap-3 text-left px-3 py-2.5 rounded text-sm font-medium transition-colors duration-150 whitespace-nowrap ${
                 activeKey === item.key
                   ? "bg-brass/20 text-brass"
                   : "text-cream/80 hover:bg-cream/10"
               }`}
             >
-              {item.label}
+              {item.icon && <item.icon size={16} className="shrink-0" />}
+              <span className={collapsed ? "md:hidden" : ""}>{item.label}</span>
             </button>
           ))}
         </nav>

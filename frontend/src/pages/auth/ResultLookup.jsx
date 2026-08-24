@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import client from "../../api/client";
 import FormattedAnswer from "../../components/FormattedAnswer";
 import ThemeToggleButton from "../../components/ThemeToggleButton";
+import Badge from "../../components/Badge";
 
 export default function ResultLookup() {
   const [mode, setMode] = useState("filter"); // "filter" | "query"
@@ -62,20 +63,10 @@ export default function ResultLookup() {
         </div>
 
         <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setMode("filter")}
-            className={`px-4 py-2 rounded-sm text-sm font-medium ${
-              mode === "filter" ? "bg-indigo text-cream" : "bg-surface text-slate border border-slate/20"
-            }`}
-          >
+          <button onClick={() => setMode("filter")} className={mode === "filter" ? "btn-primary" : "btn-secondary"}>
             Search by filters
           </button>
-          <button
-            onClick={() => setMode("query")}
-            className={`px-4 py-2 rounded-sm text-sm font-medium ${
-              mode === "query" ? "bg-indigo text-cream" : "bg-surface text-slate border border-slate/20"
-            }`}
-          >
+          <button onClick={() => setMode("query")} className={mode === "query" ? "btn-primary" : "btn-secondary"}>
             Ask a question
           </button>
         </div>
@@ -89,26 +80,26 @@ export default function ResultLookup() {
                 placeholder="Roll number"
                 value={filters.rollNumber}
                 onChange={(e) => setFilters({ ...filters, rollNumber: e.target.value })}
-                className="px-3 py-2 border border-slate/20 rounded bg-surface text-ink font-mono text-sm"
+                className="field font-mono"
               />
               <input
                 placeholder="Branch"
                 value={filters.branch}
                 onChange={(e) => setFilters({ ...filters, branch: e.target.value })}
-                className="px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm"
+                className="field"
               />
               <input
                 placeholder="Semester"
                 type="number"
                 value={filters.semester}
                 onChange={(e) => setFilters({ ...filters, semester: e.target.value })}
-                className="px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm"
+                className="field"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="bg-indigo text-cream px-5 py-2 rounded text-sm font-medium disabled:opacity-50"
+              className="btn-primary"
             >
               {loading ? "Searching..." : "Search"}
             </button>
@@ -118,10 +109,11 @@ export default function ResultLookup() {
                 {filterResults.length === 0 ? (
                   <p className="text-slate text-sm">No results found for these filters.</p>
                 ) : (
-                  <table className="w-full text-sm">
+                  <div className="overflow-x-auto">
+                  <table className="data-table w-full text-sm">
                     <thead>
-                      <tr className="text-left text-xs uppercase tracking-wide text-slate border-b border-brass/40">
-                        <th className="py-2">Roll</th>
+                      <tr>
+                        <th>Roll</th>
                         <th>Name</th>
                         <th>Sem</th>
                         <th>SGPA</th>
@@ -132,20 +124,21 @@ export default function ResultLookup() {
                     </thead>
                     <tbody>
                       {filterResults.map((r) => (
-                        <tr key={r._id} className="border-b border-slate/10">
-                          <td className="py-2 font-mono">{r.rollNumber}</td>
+                        <tr key={r._id}>
+                          <td className="font-mono">{r.rollNumber}</td>
                           <td>{r.studentName}</td>
                           <td>{r.semester}</td>
                           <td>{r.sgpa}</td>
                           <td>{r.cgpa}</td>
                           <td>
-                            <span className={r.status === "pass" ? "text-sage" : "text-rust"}>{r.status}</span>
+                            <Badge variant={r.status === "pass" ? "success" : "danger"}>{r.status}</Badge>
                           </td>
                           <td className="text-xs">{r.reappearSubjects || "N/A"}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 )}
               </div>
             )}
@@ -157,12 +150,12 @@ export default function ResultLookup() {
               value={nlQuery}
               onChange={(e) => setNlQuery(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm mb-4"
+              className="field mb-4"
             />
             <button
               type="submit"
               disabled={loading}
-              className="bg-indigo text-cream px-5 py-2 rounded text-sm font-medium disabled:opacity-50"
+              className="btn-primary"
             >
               {loading ? "Asking..." : "Ask"}
             </button>

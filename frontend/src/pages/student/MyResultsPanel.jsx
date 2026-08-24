@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import client from "../../api/client";
 import FormattedAnswer from "../../components/FormattedAnswer";
+import Badge from "../../components/Badge";
+import { Search, MessageSquareText, FileStack } from "lucide-react";
 
 /**
  * Student's "My Results" - 3 modes: filter search, NL question (both reuse
@@ -71,26 +73,23 @@ export default function MyResultsPanel() {
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => setMode("filter")}
-          className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors ${
-            mode === "filter" ? "bg-indigo text-cream" : "bg-surface text-slate border border-slate/20"
-          }`}
+          className={mode === "filter" ? "btn-primary" : "btn-secondary"}
         >
+          <Search size={14} />
           Search by filters
         </button>
         <button
           onClick={() => setMode("query")}
-          className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors ${
-            mode === "query" ? "bg-indigo text-cream" : "bg-surface text-slate border border-slate/20"
-          }`}
+          className={mode === "query" ? "btn-primary" : "btn-secondary"}
         >
+          <MessageSquareText size={14} />
           Ask a question
         </button>
         <button
           onClick={() => setMode("pdfs")}
-          className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors ${
-            mode === "pdfs" ? "bg-indigo text-cream" : "bg-surface text-slate border border-slate/20"
-          }`}
+          className={mode === "pdfs" ? "btn-primary" : "btn-secondary"}
         >
+          <FileStack size={14} />
           All Result PDFs
         </button>
       </div>
@@ -104,17 +103,17 @@ export default function MyResultsPanel() {
               placeholder="Roll number"
               value={filters.rollNumber}
               onChange={(e) => setFilters({ ...filters, rollNumber: e.target.value })}
-              className="px-3 py-2 border border-slate/20 rounded font-mono text-sm bg-surface text-ink"
+              className="field font-mono"
             />
             <input
               placeholder="Semester"
               type="number"
               value={filters.semester}
               onChange={(e) => setFilters({ ...filters, semester: e.target.value })}
-              className="px-3 py-2 border border-slate/20 rounded text-sm bg-surface text-ink"
+              className="field"
             />
           </div>
-          <button type="submit" disabled={loading} className="bg-indigo text-cream px-5 py-2 rounded text-sm font-medium disabled:opacity-50">
+          <button type="submit" disabled={loading} className="btn-primary">
             {loading ? "Searching..." : "Search"}
           </button>
 
@@ -123,10 +122,10 @@ export default function MyResultsPanel() {
               {rows.length === 0 ? (
                 <p className="text-slate text-sm">No results found for these filters.</p>
               ) : (
-                <table className="w-full text-sm">
+                <table className="data-table w-full text-sm">
                   <thead>
-                    <tr className="text-left text-xs uppercase tracking-wide text-slate border-b border-brass/40">
-                      <th className="py-2">Roll</th>
+                    <tr>
+                      <th>Roll</th>
                       <th>Sem</th>
                       <th>SGPA</th>
                       <th>CGPA</th>
@@ -136,12 +135,14 @@ export default function MyResultsPanel() {
                   </thead>
                   <tbody>
                     {rows.map((r) => (
-                      <tr key={r._id} className="border-b border-slate/10">
-                        <td className="py-2 font-mono">{r.rollNumber}</td>
+                      <tr key={r._id}>
+                        <td className="font-mono">{r.rollNumber}</td>
                         <td>{r.semester}</td>
                         <td>{r.sgpa}</td>
                         <td>{r.cgpa}</td>
-                        <td className={r.status === "pass" ? "text-sage" : "text-rust"}>{r.status}</td>
+                        <td>
+                          <Badge variant={r.status === "pass" ? "success" : "danger"}>{r.status}</Badge>
+                        </td>
                         <td className="text-xs">{r.reappearSubjects || "N/A"}</td>
                       </tr>
                     ))}
@@ -160,9 +161,9 @@ export default function MyResultsPanel() {
             value={nlQuery}
             onChange={(e) => setNlQuery(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-slate/20 rounded text-sm mb-4 bg-surface text-ink"
+            className="field mb-4"
           />
-          <button type="submit" disabled={loading} className="bg-indigo text-cream px-5 py-2 rounded text-sm font-medium disabled:opacity-50">
+          <button type="submit" disabled={loading} className="btn-primary">
             {loading ? "Asking..." : "Ask"}
           </button>
           {nlAnswer && <FormattedAnswer text={nlAnswer} className="mt-6 text-sm text-ink bg-parchment2 rounded p-4 leading-relaxed" />}
@@ -179,18 +180,16 @@ export default function MyResultsPanel() {
               placeholder="Branch"
               value={pdfFilters.branch}
               onChange={(e) => setPdfFilters({ ...pdfFilters, branch: e.target.value })}
-              className="px-3 py-2 border border-slate/20 rounded text-sm bg-surface text-ink"
+              className="field"
             />
             <input
               placeholder="Semester"
               type="number"
               value={pdfFilters.semester}
               onChange={(e) => setPdfFilters({ ...pdfFilters, semester: e.target.value })}
-              className="px-3 py-2 border border-slate/20 rounded text-sm bg-surface text-ink"
+              className="field"
             />
-            <button type="submit" disabled={loading} className="bg-indigo text-cream px-4 py-2 rounded text-sm font-medium disabled:opacity-50 w-fit">
-              {loading ? "Loading..." : "Filter"}
-            </button>
+            <button type="submit" disabled={loading} className="btn-primary w-fit">{loading ? "Loading..." : "Filter"}</button>
           </form>
 
           {pdfs === null ? (

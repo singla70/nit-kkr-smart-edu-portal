@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import client from "../../api/client";
+import Badge from "../../components/Badge";
+import { Search } from "lucide-react";
 
 export default function ResultsManagementPanel() {
   const [filters, setFilters] = useState({ rollNumber: "", branch: "", semester: "" });
@@ -48,22 +50,23 @@ export default function ResultsManagementPanel() {
           placeholder="Roll number"
           value={filters.rollNumber}
           onChange={(e) => setFilters({ ...filters, rollNumber: e.target.value })}
-          className="px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm font-mono"
+          className="field font-mono"
         />
         <input
           placeholder="Branch"
           value={filters.branch}
           onChange={(e) => setFilters({ ...filters, branch: e.target.value })}
-          className="px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm"
+          className="field"
         />
         <input
           placeholder="Semester"
           type="number"
           value={filters.semester}
           onChange={(e) => setFilters({ ...filters, semester: e.target.value })}
-          className="px-3 py-2 border border-slate/20 rounded bg-surface text-ink text-sm"
+          className="field"
         />
-        <button type="submit" disabled={loading} className="col-span-full sm:col-span-1 bg-indigo text-cream px-4 py-2 rounded text-sm font-medium w-fit disabled:opacity-50 hover:bg-indigo/90 transition-colors">
+        <button type="submit" disabled={loading} className="btn-primary col-span-full sm:col-span-1 w-fit">
+          <Search size={14} />
           {loading ? "Loading..." : "Search"}
         </button>
       </form>
@@ -71,10 +74,11 @@ export default function ResultsManagementPanel() {
       {message && <p className="text-sage text-sm mb-4 bg-sage/10 px-3 py-2 rounded">{message.text}</p>}
 
       {results && (
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="data-table w-full text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-slate border-b border-brass/40">
-              <th className="py-2">Roll</th>
+            <tr>
+              <th>Roll</th>
               <th>Name</th>
               <th>SGPA</th>
               <th>CGPA</th>
@@ -142,12 +146,12 @@ export default function ResultsManagementPanel() {
                   </td>
                 </tr>
               ) : (
-                <tr key={r._id} className="border-b border-slate/10">
-                  <td className="py-2 font-mono">{r.rollNumber}</td>
+                <tr key={r._id}>
+                  <td className="font-mono">{r.rollNumber}</td>
                   <td>{r.studentName}</td>
                   <td>{r.sgpa}</td>
                   <td>{r.cgpa}</td>
-                  <td className={r.status === "pass" ? "text-sage" : "text-rust"}>{r.status}</td>
+                  <td><Badge variant={r.status === "pass" ? "success" : "danger"}>{r.status}</Badge></td>
                   <td className="text-xs">{r.reappearSubjects || "N/A"}</td>
                   <td className="space-x-2">
                     <button onClick={() => startEdit(r)} className="text-link text-xs hover:underline transition-colors">
@@ -162,6 +166,7 @@ export default function ResultsManagementPanel() {
             )}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

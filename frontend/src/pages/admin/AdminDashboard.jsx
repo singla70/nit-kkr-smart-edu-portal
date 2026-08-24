@@ -8,16 +8,26 @@ import NotificationsPanel from "./NotificationsPanel";
 import AnnouncementsPanel from "./AnnouncementsPanel";
 import StudentsPanel from "./StudentsPanel";
 import AnalyticsPanel from "./AnalyticsPanel";
+import {
+  BarChart3,
+  UserCog,
+  GraduationCap,
+  UploadCloud,
+  ClipboardCheck,
+  Database,
+  Bell,
+  Megaphone,
+} from "lucide-react";
 
 const NAV = [
-  { key: "analytics", label: "Analytics" },
-  { key: "teachers", label: "Teacher Management" },
-  { key: "students", label: "Student Management" },
-  { key: "resultsUpload", label: "Results Upload" },
-  { key: "resultsPending", label: "Pending Verification" },
-  { key: "resultsManage", label: "Results Management" },
-  { key: "notifications", label: "Notifications" },
-  { key: "announcements", label: "Announcements" },
+  { key: "analytics", label: "Analytics", icon: BarChart3 },
+  { key: "teachers", label: "Teacher Management", icon: UserCog },
+  { key: "students", label: "Student Management", icon: GraduationCap },
+  { key: "resultsUpload", label: "Results Upload", icon: UploadCloud },
+  { key: "resultsPending", label: "Pending Verification", icon: ClipboardCheck },
+  { key: "resultsManage", label: "Results Management", icon: Database },
+  { key: "notifications", label: "Notifications", icon: Bell },
+  { key: "announcements", label: "Announcements", icon: Megaphone },
 ];
 
 export default function AdminDashboard() {

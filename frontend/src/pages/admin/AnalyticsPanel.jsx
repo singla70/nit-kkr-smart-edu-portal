@@ -1,13 +1,8 @@
 import { useState, useEffect } from "react";
 import client from "../../api/client";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
-
-const StatCard = ({ label, value }) => (
-  <div className="bg-surface border border-slate/10 rounded-sm p-5">
-    <p className="text-xs uppercase tracking-wide text-slate mb-1">{label}</p>
-    <p className="font-display text-3xl text-ink">{value}</p>
-  </div>
-);
+import { Users, GraduationCap, FileText, ClipboardList, Library, FileQuestion, Megaphone, Bell } from "lucide-react";
+import StatCard from "../../components/StatCard";
 
 export default function AnalyticsPanel() {
   const [overview, setOverview] = useState(null);
@@ -42,14 +37,14 @@ export default function AnalyticsPanel() {
     <div className="space-y-8">
       {/* System overview stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Students" value={overview.totalStudents} />
-        <StatCard label="Teachers" value={overview.totalTeachers} />
-        <StatCard label="Results on file" value={overview.totalResults} />
-        <StatCard label="Assignments" value={overview.totalAssignments} />
-        <StatCard label="Study material" value={overview.totalStudyMaterial} />
-        <StatCard label="PYQs" value={overview.totalPYQs} />
-        <StatCard label="Announcements" value={overview.totalAnnouncements} />
-        <StatCard label="Notifications" value={overview.totalNotifications} />
+        <StatCard icon={Users} accent="indigo" label="Students" value={overview.totalStudents} />
+        <StatCard icon={GraduationCap} accent="brass" label="Teachers" value={overview.totalTeachers} />
+        <StatCard icon={FileText} accent="sage" label="Results on file" value={overview.totalResults} />
+        <StatCard icon={ClipboardList} accent="rust" label="Assignments" value={overview.totalAssignments} />
+        <StatCard icon={Library} accent="indigo" label="Study material" value={overview.totalStudyMaterial} />
+        <StatCard icon={FileQuestion} accent="brass" label="PYQs" value={overview.totalPYQs} />
+        <StatCard icon={Megaphone} accent="sage" label="Announcements" value={overview.totalAnnouncements} />
+        <StatCard icon={Bell} accent="rust" label="Notifications" value={overview.totalNotifications} />
       </div>
 
       {(overview.pendingBatches > 0 || overview.failedBatches > 0) && (
