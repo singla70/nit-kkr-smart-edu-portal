@@ -7,7 +7,13 @@ import { getContentIndex } from "../config/pinecone.js";
 // either search broadly (no type filter -> true cross-content RAG) or
 // narrow to one/more types + other metadata (branch, isVisible, audience...).
 
-const DEFAULT_MIN_SCORE = Number(process.env.PINECONE_MIN_SCORE ?? 0.3);
+// Real production data showed a genuinely correct top match (a student's
+// own result, exact name) scoring 0.299 - just under the original 0.3
+// default. That default was picked without any real score data; 0.3 turned
+// out to reject good matches from this embedding model almost every time.
+// 0.15 gives real matches headroom while still dropping true noise (an
+// unrelated record scores meaningfully lower, not just a few thousandths off).
+const DEFAULT_MIN_SCORE = Number(process.env.PINECONE_MIN_SCORE ?? 0.15);
 
 /**
  * @param {Array<{ id: string, type: string, text: string, metadata?: object }>} records
@@ -56,17 +62,13 @@ export const queryContent = async (queryText, options = {}) => {
   });
   const rawHits = response?.result?.hits ?? [];
 
-  // TEMPORARY DIAGNOSTIC LOG - remove once search is confirmed working.
-  // We can't tell, without seeing real output, whether an empty/wrong answer
-  // means (a) Pinecone genuinely found nothing for this filter (e.g. old
-  // vectors still missing the "type" field - run the backfill script), or
-  // (b) it found hits but they're being dropped by the score threshold, or
-  // (c) hits come back in a shape this code isn't reading correctly. This
-  // log makes that visible in the backend's console/deployment logs instead
-  // of guessing again.
+  // DIAGNOSTIC LOG - safe to remove once scores look right for a while.
+  // Logs every hit's score (not just the top one) so a threshold can be
+  // tuned from real numbers instead of a guess - this is exactly what
+  // caught the original 0.3 default silently rejecting a correct 0.299 match.
   console.log(
-    `[queryContent] query="${queryText}" filter=${JSON.stringify(filter)} rawHitCount=${rawHits.length}` +
-      (rawHits[0] ? ` firstHitScore=${rawHits[0]._score ?? rawHits[0].score} firstHitRaw=${JSON.stringify(rawHits[0]).slice(0, 300)}` : "")
+    `[queryContent] query="${queryText}" filter=${JSON.stringify(filter)} minScore=${minScore} ` +
+      `hits=${rawHits.map((h) => `${(h._score ?? h.score)?.toFixed(3)}${(h._score ?? h.score) < minScore ? "(dropped)" : ""}`).join(", ")}`
   );
 
   // Score field name has varied across Pinecone SDK versions (_score vs score)
