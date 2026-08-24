@@ -6,7 +6,10 @@
 // vector - so the chat's semantic search would silently never find it. This
 // script does a one-time full sync of everything currently in Mongo.
 // Safe to re-run any time (upsert = overwrite, not duplicate).
-import dotenv from "dotenv";
+// Side-effect import - loads .env before any other import runs. See
+// fixPdfExtensions.js for why this matters (some config modules, like
+// cloudinary.js, read process.env eagerly at import time).
+import "dotenv/config";
 import mongoose from "mongoose";
 import { connectDB } from "../config/db.js";
 import Notification from "../models/Notification.js";
@@ -24,8 +27,6 @@ import {
   buildStudyMaterialSummaryText,
 } from "../utils/contentSummaryText.js";
 import { buildResultSummaryText } from "../utils/resultSummaryText.js";
-
-dotenv.config();
 
 // Pinecone's upsertRecords has a request-size limit - batch instead of
 // sending everything (or one-record-at-a-time, which is slow) in one call.

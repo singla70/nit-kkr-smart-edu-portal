@@ -14,6 +14,14 @@ export const uploadBufferToCloudinary = (buffer, folder, filename) => {
         resource_type: "raw", // PDFs go up as raw files
         folder: `nit-smart-portal/${folder}`,
         public_id: filename?.replace(/\.pdf$/i, ""),
+        // Without this, Cloudinary has no way to know this "raw" upload is a
+        // PDF (we strip the .pdf extension from public_id above for a
+        // cleaner name) - it then serves the file without the correct
+        // Content-Type/extension, so browsers try to render the binary PDF
+        // bytes as plain text, which shows up as garbled/random characters
+        // instead of opening as a readable PDF. Setting format explicitly
+        // fixes this regardless of what naming convention public_id uses.
+        format: "pdf",
         overwrite: false,
       },
       (error, result) => {
