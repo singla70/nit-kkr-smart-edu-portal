@@ -62,14 +62,17 @@ export const queryContent = async (queryText, options = {}) => {
   });
   const rawHits = response?.result?.hits ?? [];
 
-  // DIAGNOSTIC LOG - safe to remove once scores look right for a while.
-  // Logs every hit's score (not just the top one) so a threshold can be
-  // tuned from real numbers instead of a guess - this is exactly what
-  // caught the original 0.3 default silently rejecting a correct 0.299 match.
-  console.log(
-    `[queryContent] query="${queryText}" filter=${JSON.stringify(filter)} minScore=${minScore} ` +
-      `hits=${rawHits.map((h) => `${(h._score ?? h.score)?.toFixed(3)}${(h._score ?? h.score) < minScore ? "(dropped)" : ""}`).join(", ")}`
-  );
+  // DIAGNOSTIC LOG - now that the score threshold has been confirmed working
+  // against real data, this is gated behind an env flag instead of firing on
+  // every single chat message forever (that would flood production logs).
+  // Turn it back on temporarily by setting DEBUG_PINECONE=true on Render if
+  // search quality ever needs re-tuning.
+  if (process.env.DEBUG_PINECONE === "true") {
+    console.log(
+      `[queryContent] query="${queryText}" filter=${JSON.stringify(filter)} minScore=${minScore} ` +
+        `hits=${rawHits.map((h) => `${(h._score ?? h.score)?.toFixed(3)}${(h._score ?? h.score) < minScore ? "(dropped)" : ""}`).join(", ")}`
+    );
+  }
 
   // Score field name has varied across Pinecone SDK versions (_score vs score)
   // - check both rather than silently treating an unscored hit as a 0 (which

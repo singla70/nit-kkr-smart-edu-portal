@@ -35,26 +35,48 @@ import ExtractionBatch from "../models/ExtractionBatch.js";
 // Pulls the full Cloudinary public_id (folder path included) out of a
 // secure_url, e.g.
 // ".../raw/upload/v1234567890/nit-smart-portal/results/abc" -> "nit-smart-portal/results/abc"
-// Handles URLs both with and without a version segment.
+// Handles URLs both with and without a version segment. Also decodes
+// percent-encoding (Cloudinary encodes spaces/parentheses/etc in the URL,
+// e.g. "Resume (2).pdf" -> "Resume%20%282%29" - the actual public_id stored
+// in Cloudinary is the decoded form, so renaming with the raw encoded
+// string fails with "Resource not found" even though the file exists).
 const extractPublicId = (url) => {
   const match = url.match(/\/upload\/(?:v\d+\/)?(.+)$/);
-  return match ? match[1] : null;
+  return match ? decodeURIComponent(match[1]) : null;
 };
 
+// Multiple Mongo docs can point at the exact same Cloudinary asset (e.g.
+// several ExtractionBatch records sharing one source PDF) - without this
+// cache, the first doc's rename would succeed, and every later doc pointing
+// at that same original URL would then fail with "Resource not found"
+// (it's already been renamed away under the old name). Also caches
+// failures, so a genuinely missing asset referenced by several docs only
+// logs its error once instead of spamming the same line repeatedly.
+const renameCache = new Map(); // publicId -> { url } | { error }
+
 const fixUrl = async (url) => {
-  if (!url || url.toLowerCase().endsWith(".pdf")) return null; // already fine, or nothing to fix
+  if (!url || url.toLowerCase().endsWith(".pdf")) return { skip: true }; // already fine, nothing to do
   const publicId = extractPublicId(url);
-  if (!publicId) {
-    console.log(`  ! couldn't parse public_id from: ${url}`);
-    return null;
+  if (!publicId) return { error: "couldn't parse public_id from URL" };
+
+  if (renameCache.has(publicId)) {
+    const cached = renameCache.get(publicId);
+    return cached.url ? { url: cached.url } : { error: cached.error, cached: true };
   }
-  const newPublicId = `${publicId}.pdf`;
-  const result = await cloudinary.uploader.rename(publicId, newPublicId, {
-    resource_type: "raw",
-    overwrite: true,
-    invalidate: true, // clear any CDN cache for the old (broken) URL
-  });
-  return result.secure_url;
+
+  try {
+    const newPublicId = `${publicId}.pdf`;
+    const result = await cloudinary.uploader.rename(publicId, newPublicId, {
+      resource_type: "raw",
+      overwrite: true,
+      invalidate: true, // clear any CDN cache for the old (broken) URL
+    });
+    renameCache.set(publicId, { url: result.secure_url });
+    return { url: result.secure_url };
+  } catch (err) {
+    renameCache.set(publicId, { error: err.message });
+    return { error: err.message };
+  }
 };
 
 // field: the Mongo field on the doc holding the Cloudinary URL
@@ -62,23 +84,27 @@ const fixCollection = async (label, Model, field) => {
   const docs = await Model.find({ [field]: { $exists: true, $ne: null } });
   let fixed = 0,
     skipped = 0,
+    missing = 0, // asset genuinely doesn't exist on Cloudinary anymore - likely stale/test data, not a bug
     failed = 0;
   for (const doc of docs) {
-    try {
-      const newUrl = await fixUrl(doc[field]);
-      if (!newUrl) {
-        skipped++;
-        continue;
-      }
-      doc[field] = newUrl;
+    const result = await fixUrl(doc[field]);
+    if (result.skip) {
+      skipped++;
+    } else if (result.url) {
+      doc[field] = result.url;
       await doc.save();
       fixed++;
-    } catch (err) {
+    } else if (/not found/i.test(result.error)) {
+      if (!result.cached) console.log(`  ! asset missing on Cloudinary (${doc[field]})`);
+      missing++;
+    } else {
+      if (!result.cached) console.log(`  ! failed on ${doc._id}: ${result.error}`);
       failed++;
-      console.log(`  ! failed on ${doc._id}: ${err.message}`);
     }
   }
-  console.log(`${label}: ${fixed} fixed, ${skipped} already fine, ${failed} failed (out of ${docs.length})`);
+  console.log(
+    `${label}: ${fixed} fixed, ${skipped} already fine, ${missing} missing on Cloudinary, ${failed} other failures (out of ${docs.length})`
+  );
 };
 
 const run = async () => {
