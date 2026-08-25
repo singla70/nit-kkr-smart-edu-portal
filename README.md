@@ -5,8 +5,7 @@ A full-stack, AI-powered college portal for NIT Kurukshetra with three roles —
 stack with a unified Retrieval-Augmented Generation (RAG) core that powers result lookup,
 campus Q&A, and content search across the entire portal from one chat interface.
 
-**Live demo:** _add your deployed URL here_
-**Video walkthrough:** _optional, add if you record one for placements_
+
 
 ---
 
@@ -207,10 +206,6 @@ Full list with inline comments in `backend/.env.example`. Frontend only needs `V
 Worth calling out explicitly, since these were caught by deliberate audit rather than bug
 reports:
 
-- **Personalized-chat privacy leak** — a logged-in student asking a vague result question
-  without their roll number was originally answered via an unscoped semantic search, risking
-  another student's grades surfacing as "yours." Fixed by scoping to the asker's own roll number
-  whenever their identity is known.
 - **Audience leak** — teacher-only announcements were retrievable via a student's chat before
   audience filtering was added to the retrieval layer.
 - **Guest scope creep** — the guest chat endpoint could answer non-result questions before an
@@ -236,20 +231,3 @@ movie-recommendation project, not part of this portal's core scope).
 
 ---
 
-## What I'd point to in an interview
-
-- Migrating a retrieval architecture live (single-type → unified multi-type Pinecone index)
-  without breaking existing functionality, including the migration edge cases that come with it
-  (stale metadata on pre-migration vectors, shared-asset renaming, idempotent backfills).
-- Diagnosing a retrieval-quality bug from raw vector scores captured in production logs, rather
-  than guessing at a similarity threshold.
-- Threat-modeling a chat interface against its own retrieval layer — recognizing that "the LLM
-  answered confidently" isn't the same as "the LLM was allowed to see this data," and drawing the
-  access-control line per content type (results public-by-design, everything else identity- or
-  audience-scoped).
-- Reducing LLM calls per request (2 → 1) by moving routing to cheap heuristics instead of a
-  second model call, while *improving* capability (multi-topic answers in one response) at the
-  same time.
-- A two-stage human-in-the-loop pipeline for the one place where AI-extracted data becomes a
-  source of truth (results) — batched, concurrent, per-batch failure isolation, and nothing
-  reaches students without an explicit admin commit step.
